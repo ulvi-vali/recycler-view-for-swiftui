@@ -1,40 +1,40 @@
 # RecyclerView for SwiftUI
 
-`RecyclerView`, iOS layihələrində **SwiftUI** daxilində **UIKit** performansı və güclü `UICollectionView` infrastrukturundan istifadə edərək siyahıları (`List` və ya `ScrollView` + `LazyVStack` alternativləri kimi) yüksək performansla render etmək üçün yaradılmış fərdiləşdirilmiş komponentdir.
+`RecyclerView` is a highly optimized custom component designed for **SwiftUI** projects that leverages the power, flexibility, and performance of **UIKit's** `UICollectionView`. It serves as a superior alternative to standard SwiftUI `List` or `ScrollView` + `LazyVStack` configurations, especially when dealing with complex behaviors.
 
-Xüsusilə böyük məlumat setləri, dinamik hüceyrə hündürlükləri, qarışıq Grid və ya Linear dizaynlar, pagination (sonsuz skrol) və tərs siyahı (`reverseLayout`/`stackFromEnd`) ehtiyacları üçün mükəmməl həlldir.
-
----
-
-## Özəlliklər (Features)
-
-- ⚡ **Yüksək Performans:** `UICollectionView` və `UIHostingController` inteqrasiyası sayəsində hüceyrələrin təkrar istifadəsi (cell reuse) təmin edilir.
-- 📐 **Dinamik Hüceyrə Hündürlüyü:** Hüceyrə daxilindəki SwiftUI mətni və ya kontentinə uyğun olaraq ölçülər avtomatik hesablanır.
-- 🔀 **Layout Menecerləri:** Tək sətirlə şaquli/üfüqi siyahı (`linear`) və ya çoxsütunlu tor (`grid`) görünüşünə keçid.
-- 🔄 **Tərs Siyahı Dəstəyi:** Çat (Chat) tətbiqləri üçün xüsusi `reverseLayout` və `stackFromEnd` konfiqurasiyaları.
-- 📈 **Sonsuz Skrol (Pagination):** Siyahının sonuna yaxınlaşdıqda avtomatik işə düşən ağıllı `onLoadMore` mexanizmi.
-- 📱 **Hündürlük Hesablama (Wrap Content):** Kontentin həcminə uyğun olaraq çərçivə hündürlüyünü dinamik müəyyənləşdirə bilir (`calculateWrapHeight`).
-- 🛠️ **iOS 16+ Optimizasiyası:** iOS 16 və daha yuxarı versiyalarda yerli `UIHostingConfiguration` strukturundan istifadə edir.
+It is the perfect solution for large datasets, dynamic cell heights, heterogeneous Grid or Linear layouts, infinite scrolling (pagination), and reversed list alignments (`reverseLayout` / `stackFromEnd`).
 
 ---
 
-## Quraşdırma (Installation)
+## Features
+
+- ⚡ **High Performance:** Implements cell reuse natively by integrating `UICollectionView` and `UIHostingController`.
+- 📐 **Dynamic Cell Height:** Automatically calculates heights based on the intrinsic size of the embedded SwiftUI views.
+- 🔀 **Layout Managers:** Switch between a single-row linear view (`linear` - vertical or horizontal) or a multi-column grid (`grid`) with a single line of code.
+- 🔄 **Reversed Layout Support:** Ideal for Chat applications, offering robust support for `reverseLayout` and `stackFromEnd`.
+- 📈 **Infinite Scrolling (Pagination):** Equipped with an intelligent `onLoadMore` mechanism that triggers data fetching efficiently before reaching the end of the list.
+- 📱 **Wrap Content Support:** Capable of dynamically adjusting its own frame height based on the total height of its items (`calculateWrapHeight`).
+- 🛠️ **iOS 16+ Optimization:** Utilizes native `UIHostingConfiguration` for enhanced performance when running on iOS 16 and above.
+
+---
+
+## Installation
 
 ### Swift Package Manager (SPM)
 
-Layihənizə `Package.swift` faylı vasitəsilə və ya Xcode daxilində birbaşa asılılıq (dependency) olaraq əlavə edə bilərsiniz:
+You can add this package as a dependency to your project via `Package.swift` or directly within Xcode using the repository URL:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/SİZİN_USER_NAME/RecyclerView.git", from: "1.0.0")
+    .package(url: "https://github.com/YOUR_USERNAME/RecyclerView.git", from: "1.0.0")
 ]
 ```
 
 ---
 
-## İstifadə Qaydası (Usage)
+## Usage Guide
 
-### 1. Sadə Şaquli Siyahı (Linear Vertical)
+### 1. Simple Vertical List (Linear Vertical)
 
 ```swift
 import SwiftUI
@@ -46,14 +46,14 @@ struct ItemModel: Identifiable {
 }
 
 struct ExampleView: View {
-    @State private var items = (1...100).map { ItemModel(title: "Başlıq \($0)", description: "Təsvir mətni bura yazılır...") }
+    @State private var items = (1...100).map { ItemModel(title: "Title \($0)", description: "Description details go here...") }
     
     var body: some View {
         RecyclerView(data: items, layout: .linear(orientation: .vertical, spacing: 10)) { item in
-            VCornerCard(item: item) // Sizin SwiftUI View
+            VCornerCard(item: item) // Your custom SwiftUI View
         }
         .onItemClick { index, item in
-            print("Klikləndi: \(item.title) (İndeks: \(index))")
+            print("Clicked: \(item.title) at index: \(index)")
         }
     }
 }
@@ -72,37 +72,37 @@ struct VCornerCard: View {
 }
 ```
 
-### 2. Grid (Tor) Görünüşü və Span Size Lookup
+### 2. Grid Layout with Span Size Lookup
 
-Əgər müəyyən elementlərin bütün sətri tutmasını (məsələn, başlıqlar), digərlərinin isə sütunlara bölünməsini istəyirsinizsə:
+If you want certain items to span across multiple columns (e.g., headers or banners) while keeping others split into grid columns:
 
 ```swift
 RecyclerView(data: items, layout: .grid(spanCount: 3, spacing: 12, orientation: .vertical)) { item in
     GridCellView(item: item)
 }
 .spanSizeLookup { item in
-    // Əgər element xüsusi bir tipdirsə 3 sütunun hamısını tutsun, yoxsa 1 sütun
-    return item.title.contains("Xüsusi") ? 3 : 1
+    // If the item represents a special category, occupy all 3 columns; otherwise, occupy 1 column.
+    return item.title.contains("Special") ? 3 : 1
 }
 ```
 
-### 3. Sonsuz Skrol (Load More / Pagination)
+### 3. Infinite Scroll (Load More / Pagination)
 
-Siyahı aşağı çəkildikcə yeni məlumatların yüklənməsi üçün `onLoadMore` modifikatorundan istifadə edin:
+Implement the `onLoadMore` modifier to seamlessly load new items as the user scrolls down:
 
 ```swift
 RecyclerView(data: items, layout: .linear(orientation: .vertical, spacing: 8)) { item in
     Text(item.title)
 }
 .onLoadMore(pageSize: 20) { page, totalItemCount in
-    print("Yeni səhifə yüklənir: \(page). Ümumi element: \(totalItemCount)")
-    // Serverdən və ya databazadan yeni məlumatları gətirib 'items' massivinə əlavə edin
+    print("Loading page: \(page). Total items currently: \(totalItemCount)")
+    // Fetch new data from your API or local database and append them to your 'items' array
 }
 ```
 
-### 4. Çat Tətbiqləri üçün Tərs Siyahı (Reverse & Stack From End)
+### 4. Reverse & Stack From End for Chat Layouts
 
-Yeni mesajların aşağıdan yuxarıya doğru düzülməsi və skrolun aşağıdan başlaması üçün:
+To build chat feeds where messages flow from the bottom up and the viewport initializes at the bottom:
 
 ```swift
 RecyclerView(data: messages, layout: .linear(orientation: .vertical, spacing: 8)) { message in
@@ -114,32 +114,32 @@ RecyclerView(data: messages, layout: .linear(orientation: .vertical, spacing: 8)
 
 ---
 
-## Struktur Konfiqurasiyası (Modifikatorlar)
+## Configuration API (Modifiers)
 
-`RecyclerView` komponenti tam idarəetmə üçün aşağıdakı zəncirvari funksiyaları dəstəkləyir:
+The `RecyclerView` component provides fluid chaining methods for precise configuration:
 
-| Modifikator | Tip | Təsvir |
+| Modifier | Type | Description |
 | :--- | :--- | :--- |
-| `.onItemClick((Int, Item) -> Void)` | Blok | Siyahıdakı hər hansı elementə kliklədikdə icra olunur. |
-| `.onLoadMore(pageSize: Int, (Int, Int) -> Void)` | Blok | Pagination üçün səhifə ölçüsü və yükləmə tətikləyicisi. |
-| `.spanSizeLookup((Item) -> Int)` | Blok | Grid rejimində elementin neçə sütun tutacağını təyin edir. |
-| `.showsScrollIndicator(Bool)` | Boolean | Skrol xəttinin (indicator) görünüb-görünməməsi. |
-| `.reverseLayout(Bool)` | Boolean | Siyahını alt-üst (tərs) çevirir. |
-| `.stackFromEnd(Bool)` | Boolean | Siyahını aşağıdan yuxarıya doğru doldurur. |
-| `.verticalLayout(RecyclerViewVerticalLayout)` | Enum | `.wrapContent` (hündürlüyü məzmuna görə sıxır) və ya `.matchParent` (ekranı doldurur). |
-| `.withAnimation(Bool)` | Boolean | Məlumat dəyişdikdə animasiyalı keçidlərin aktivliyi. |
-| `.onScroll((CGPoint) -> Void)` | Blok | Skrol offset qiymətlərini canlı izləmək üçün. |
+| `.onItemClick((Int, Item) -> Void)` | Closure | Triggered when an item in the list is selected. |
+| `.onLoadMore(pageSize: Int, (Int, Int) -> Void)` | Closure | Sets page limit and provides callbacks for triggering pagination. |
+| `.spanSizeLookup((Item) -> Int)` | Closure | Defines how many column spans an item should occupy in Grid mode. |
+| `.showsScrollIndicator(Bool)` | Boolean | Toggles visibility of the vertical or horizontal scroll indicator. |
+| `.reverseLayout(Bool)` | Boolean | Flips the visual rendering and scroll mechanics of the list. |
+| `.stackFromEnd(Bool)` | Boolean | Begins filling the layout from the bottom/end of the container. |
+| `.verticalLayout(RecyclerViewVerticalLayout)` | Enum | Choose between `.wrapContent` (calculates total size) or `.matchParent` (fills screen bounds). |
+| `.withAnimation(Bool)` | Boolean | Controls whether incremental data changes should be animated. |
+| `.onScroll((CGPoint) -> Void)` | Closure | Provides real-time stream of content offset adjustments. |
 
 ---
 
-## Tələblər (Requirements)
+## Requirements
 
-- iOS 13.0+ (iOS 16+ ilə əlavə performans optimizasiyası)
+- iOS 13.0+ (with native underlying optimizations for iOS 16+)
 - Xcode 11+
 - Swift 5.5+
 
 ---
 
-## Müəllif və lisenziya
+## License
 
-Bu layihə MIT lisenziyası altında yayılır. Layihənizdə sərbəst şəkildə istifadə edə, dəyişdirə bilərsiniz.
+This project is available under the MIT License. Feel free to use, modify, and distribute it in your applications.
