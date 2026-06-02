@@ -425,7 +425,7 @@ public struct RecyclerView<Item: Identifiable, Content: View>: View {
             onLoadMore: onLoadMore,
             verticalLayout: verticalLayout
         )
-        .padding(.top, withoutStatusBar ? (Double(UIDevice.current.systemVersion) ?? 13.0 >= 15.0 ? -iOSUtils.statusBarHeight : 0) : 0)
+        .padding(.top, withoutStatusBar ? (Double(UIDevice.current.systemVersion) ?? 13.0 >= 15.0 ? -statusBarHeight : 0) : 0)
     }
     
     private func measureCellHeight(for item: Item, width: CGFloat?) -> CGFloat {
