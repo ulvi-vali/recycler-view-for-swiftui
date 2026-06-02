@@ -26,7 +26,7 @@ You can add this package as a dependency to your project via `Package.swift` or 
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/YOUR_USERNAME/RecyclerView.git", from: "1.0.0")
+    .package(url: "https://github.com/ulvi-vali/recycler-view-for-swiftui.git", from: "1.0.0")
 ]
 ```
 
