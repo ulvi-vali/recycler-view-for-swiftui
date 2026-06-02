@@ -138,7 +138,7 @@ public class RecyclerViewAdapter<Item: Identifiable, Content: View>: NSObject, U
     public var onItemClick: ((Int, Item) -> Void)?
     public var onLoadMore: ((Int, Int) -> Void)?
     public var layout: RecyclerViewLayoutManager = .linear(orientation: .vertical, spacing: 0)
-    public var pageSize: Int = SizeUtils.VERTICAL_PAGE_SIZE
+    public var pageSize: Int = 50
     public var onScroll: ((CGPoint) -> Void)?
     
     private var currentPage: Int = 0
@@ -305,7 +305,7 @@ public struct RecyclerView<Item: Identifiable, Content: View>: View {
     private var withAnimation: Bool = true
     private var reverseLayout: Bool = false
     private var stackFromEnd: Bool = false
-    private var pageSize: Int = SizeUtils.VERTICAL_PAGE_SIZE
+    private var pageSize: Int = 50
     private var onScroll: ((CGPoint) -> Void)?
     private var onLoadMore: ((Int, Int) -> Void)?
     private var withoutStatusBar: Bool = false
