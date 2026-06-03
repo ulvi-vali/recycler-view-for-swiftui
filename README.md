@@ -181,9 +181,17 @@ RecyclerView(data: messages, layout: .linear(orientation: .vertical, spacing: 8)
     MessageBubble(message: message)
 }
 .reverseLayout(true)
+
+```
+
+```swift
+RecyclerView(data: messages, layout: .linear(orientation: .vertical, spacing: 8)) { message in
+    MessageBubble(message: message)
+}
 .stackFromEnd(true)
 
 ```
+
 
 ## Configuration API (Modifiers)
 
