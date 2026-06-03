@@ -74,7 +74,7 @@ struct VCornerCard: View {
 
 #### Dynamic Spans with Enum-based Feed
 
-Here is an example demonstrating how to build a grid with a `spanCount` of 4, where headers occupy the full width (4 spans), banners occupy 4 spans, and standard products occupy 2 spans (creating a 2-column look):
+Here is an example demonstrating how to build a grid with a `spanCount` of 2, where headers occupy the full width (2 spans), banners occupy 2 spans, and standard products occupy 1 spans (creating a 2-column look):
 
 ```swift
 import SwiftUI
@@ -105,7 +105,7 @@ struct DashboardView: View {
     ]
     
     var body: some View {
-        RecyclerView(data: feedItems, layout: .grid(spanCount: 4, spacing: 12, orientation: .vertical)) { item in
+        RecyclerView(data: feedItems, layout: .grid(spanCount: 2, spacing: 12, orientation: .vertical)) { item in
             switch item {
             case .header(_, let title):
                 Text(title)
@@ -145,11 +145,11 @@ struct DashboardView: View {
         .spanSizeLookup { item in
             switch item {
             case .header:
-                return 4
-            case .promoBanner:
-                return 4
-            case .product:
                 return 2
+            case .promoBanner:
+                return 2
+            case .product:
+                return 1
             }
         }
         .padding(.horizontal)
