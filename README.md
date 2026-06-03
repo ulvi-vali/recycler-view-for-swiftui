@@ -4,19 +4,15 @@
 
 It is the perfect solution for large datasets, dynamic cell heights, heterogeneous Grid or Linear layouts, infinite scrolling (pagination), and reversed list alignments (`reverseLayout` / `stackFromEnd`).
 
----
-
 ## Features
 
-- ⚡ **High Performance:** Implements cell reuse natively by integrating `UICollectionView` and `UIHostingController`.
-- 📐 **Dynamic Cell Height:** Automatically calculates heights based on the intrinsic size of the embedded SwiftUI views.
-- 🔀 **Layout Managers:** Switch between a single-row linear view (`linear` - vertical or horizontal) or a multi-column grid (`grid`) with a single line of code.
-- 🔄 **Reversed Layout Support:** Ideal for Chat applications, offering robust support for `reverseLayout` and `stackFromEnd`.
-- 📈 **Infinite Scrolling (Pagination):** Equipped with an intelligent `onLoadMore` mechanism that triggers data fetching efficiently before reaching the end of the list.
-- 📱 **Wrap Content Support:** Capable of dynamically adjusting its own frame height based on the total height of its items (`calculateWrapHeight`).
-- 🛠️ **iOS 16+ Optimization:** Utilizes native `UIHostingConfiguration` for enhanced performance when running on iOS 16 and above.
-
----
+* ⚡ **High Performance:** Implements cell reuse natively by integrating `UICollectionView` and `UIHostingController`.
+* 📐 **Dynamic Cell Height:** Automatically calculates heights based on the intrinsic size of the embedded SwiftUI views.
+* 🔀 **Layout Managers:** Switch between a single-row linear view (`linear` - vertical or horizontal) or a multi-column grid (`grid`) with a single line of code.
+* 🔄 **Reverse Layout Support:** Ideal for Chat applications, offering robust support for `reverseLayout` and `stackFromEnd`.
+* 📈 **Infinite Scrolling (Pagination):** Equipped with an intelligent `onLoadMore` mechanism that triggers data fetching efficiently before reaching the end of the list.
+* 📱 **Wrap Content Support:** Capable of dynamically adjusting its own frame height based on the total height of its items (`calculateWrapHeight`).
+* 🛠️ **iOS 16+ Optimization:** Utilizes native `UIHostingConfiguration` for enhanced performance when running on iOS 16 and above.
 
 ## Installation
 
@@ -28,9 +24,8 @@ You can add this package as a dependency to your project via `Package.swift` or 
 dependencies: [
     .package(url: "https://github.com/ulvi-vali/recycler-view-for-swiftui.git", from: "1.0.0")
 ]
-```
 
----
+```
 
 ## Usage Guide
 
@@ -50,7 +45,7 @@ struct ExampleView: View {
     
     var body: some View {
         RecyclerView(data: items, layout: .linear(orientation: .vertical, spacing: 10)) { item in
-            VCornerCard(item: item) // Your custom SwiftUI View
+            VCornerCard(item: item)
         }
         .onItemClick { index, item in
             print("Clicked: \(item.title) at index: \(index)")
@@ -70,20 +65,97 @@ struct VCornerCard: View {
         .background(Color(.systemBackground))
     }
 }
+
 ```
 
 ### 2. Grid Layout with Span Size Lookup
 
-If you want certain items to span across multiple columns (e.g., headers or banners) while keeping others split into grid columns:
+`spanSizeLookup` allows you to create heterogeneous grid structures where different items span a different number of columns. This is perfect for dashboards, feed streams, or e-commerce categories where you want to mix banners, full-width headers, and double-column product items inside a single grid layout.
+
+#### Dynamic Spans with Enum-based Feed
+
+Here is an example demonstrating how to build a grid with a `spanCount` of 4, where headers occupy the full width (4 spans), banners occupy 4 spans, and standard products occupy 2 spans (creating a 2-column look):
 
 ```swift
-RecyclerView(data: items, layout: .grid(spanCount: 3, spacing: 12, orientation: .vertical)) { item in
-    GridCellView(item: item)
+import SwiftUI
+
+enum FeedItem: Identifiable {
+    case header(id: UUID, title: String)
+    case promoBanner(id: UUID, imageColor: Color, title: String)
+    case product(id: UUID, name: String, price: String)
+    
+    var id: UUID {
+        switch self {
+        case .header(let id, _): return id
+        case .promoBanner(let id, _, _): return id
+        case .product(let id, _, _): return id
+        }
+    }
 }
-.spanSizeLookup { item in
-    // If the item represents a special category, occupy all 3 columns; otherwise, occupy 1 column.
-    return item.title.contains("Special") ? 3 : 1
+
+struct DashboardView: View {
+    @State private var feedItems: [FeedItem] = [
+        .header(id: UUID(), title: "Exclusive Offers"),
+        .promoBanner(id: UUID(), imageColor: .orange, title: "Summer Sale! Up to 50% Off"),
+        .header(id: UUID(), title: "Popular Products"),
+        .product(id: UUID(), name: "Wireless Headphones", price: "$99"),
+        .product(id: UUID(), name: "Smart Watch", price: "$199"),
+        .product(id: UUID(), name: "Mechanical Keyboard", price: "$120"),
+        .product(id: UUID(), name: "Gaming Mouse", price: "$60")
+    ]
+    
+    var body: some View {
+        RecyclerView(data: feedItems, layout: .grid(spanCount: 4, spacing: 12, orientation: .vertical)) { item in
+            switch item {
+            case .header(_, let title):
+                Text(title)
+                    .font(.title2)
+                    .bold()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 8)
+                
+            case .promoBanner(_, let color, let title):
+                VStack {
+                    Text(title)
+                        .font(.headline)
+                        .foregroundColor(.white)
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 150)
+                .background(color)
+                .cornerRadius(12)
+                
+            case .product(_, let name, let price):
+                VStack(alignment: .leading, spacing: 6) {
+                    Color.gray.opacity(0.2)
+                        .frame(height: 120)
+                        .cornerRadius(8)
+                    Text(name)
+                        .font(.subheadline)
+                        .lineLimit(1)
+                    Text(price)
+                        .font(.caption)
+                        .bold()
+                }
+                .padding(8)
+                .background(Color(.secondarySystemBackground))
+                .cornerRadius(10)
+            }
+        }
+        .spanSizeLookup { item in
+            switch item {
+            case .header:
+                return 4
+            case .promoBanner:
+                return 4
+            case .product:
+                return 2
+            }
+        }
+        .padding(.horizontal)
+    }
 }
+
 ```
 
 ### 3. Infinite Scroll (Load More / Pagination)
@@ -96,8 +168,8 @@ RecyclerView(data: items, layout: .linear(orientation: .vertical, spacing: 8)) {
 }
 .onLoadMore(pageSize: 20) { page, totalItemCount in
     print("Loading page: \(page). Total items currently: \(totalItemCount)")
-    // Fetch new data from your API or local database and append them to your 'items' array
 }
+
 ```
 
 ### 4. Reverse & Stack From End for Chat Layouts
@@ -110,16 +182,15 @@ RecyclerView(data: messages, layout: .linear(orientation: .vertical, spacing: 8)
 }
 .reverseLayout(true)
 .stackFromEnd(true)
-```
 
----
+```
 
 ## Configuration API (Modifiers)
 
 The `RecyclerView` component provides fluid chaining methods for precise configuration:
 
 | Modifier | Type | Description |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | `.onItemClick((Int, Item) -> Void)` | Closure | Triggered when an item in the list is selected. |
 | `.onLoadMore(pageSize: Int, (Int, Int) -> Void)` | Closure | Sets page limit and provides callbacks for triggering pagination. |
 | `.spanSizeLookup((Item) -> Int)` | Closure | Defines how many column spans an item should occupy in Grid mode. |
@@ -130,16 +201,16 @@ The `RecyclerView` component provides fluid chaining methods for precise configu
 | `.withAnimation(Bool)` | Boolean | Controls whether incremental data changes should be animated. |
 | `.onScroll((CGPoint) -> Void)` | Closure | Provides real-time stream of content offset adjustments. |
 
----
-
 ## Requirements
 
-- iOS 13.0+ (with native underlying optimizations for iOS 16+)
-- Xcode 11+
-- Swift 5.5+
-
----
+* iOS 13.0+ (with native underlying optimizations for iOS 16+)
+* Xcode 11+
+* Swift 5.5+
 
 ## License
 
 This project is available under the MIT License. Feel free to use, modify, and distribute it in your applications.
+
+```
+
+```
