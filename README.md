@@ -210,7 +210,3 @@ The `RecyclerView` component provides fluid chaining methods for precise configu
 ## License
 
 This project is available under the MIT License. Feel free to use, modify, and distribute it in your applications.
-
-```
-
-```
