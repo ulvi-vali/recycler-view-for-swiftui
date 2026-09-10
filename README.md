@@ -71,7 +71,11 @@ It also keeps Android's vocabulary (linear and grid layout managers, `spanSizeLo
   iOS 16 and later and by `UIHostingController` before that.
 - **Self-sizing rows.** Vertical lists measure each row once and use that height as the layout
   estimate, so rows do not jump as they scroll into view.
-- **Linear and grid layouts**, vertical or horizontal, with per-item column spans.
+- **Linear and grid layouts**, vertical or horizontal.
+- **Column spans with `spanSizeLookup`.** Decide per item how many columns it takes, like Android's
+  `GridLayoutManager.SpanSizeLookup`, so full-width section headers and banners can sit in the same
+  grid as regular cells. Spans are clamped to the column count, and an item that does not fit on the
+  current row starts a new one.
 - **Animated updates.** Changes are diffed by `id` off the main thread and applied as batch updates.
 - **Pagination** with a single callback.
 - **Chat layouts** with `stackFromEnd` and `reverseLayout`.
