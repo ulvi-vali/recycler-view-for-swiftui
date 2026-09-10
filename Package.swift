@@ -7,19 +7,10 @@ let package = Package(
         .iOS(.v13)
     ],
     products: [
-        .library(
-            name: "RecyclerView",
-            targets: ["RecyclerView"]
-        ),
-    ],
-    dependencies: [
-        // Bu paket heç bir xarici kitabxanadan (3rd party dependency) asılı deyil.
+        .library(name: "RecyclerView", targets: ["RecyclerView"])
     ],
     targets: [
-        .target(
-            name: "RecyclerView",
-            dependencies: [],
-            path: "Sources"
-        )
+        .target(name: "RecyclerView"),
+        .testTarget(name: "RecyclerViewTests", dependencies: ["RecyclerView"])
     ]
 )
