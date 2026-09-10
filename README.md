@@ -5,6 +5,7 @@
 [![Platform](https://img.shields.io/badge/platform-iOS%2013%2B-blue.svg)](#requirements)
 [![Swift](https://img.shields.io/badge/Swift-5.9%2B-orange.svg)](https://www.swift.org)
 [![License: MIT](https://img.shields.io/badge/license-MIT-lightgrey.svg)](LICENSE)
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/ulvivali)
 
 A `UICollectionView`-backed list for **SwiftUI**, modelled on Android's **RecyclerView**. It reuses
 cells, sizes every row to its SwiftUI content, and adds what SwiftUI lists leave out: grids with
@@ -43,6 +44,7 @@ RecyclerView(data: articles, layout: .linear(spacing: 12)) { article in
 - [Troubleshooting](#troubleshooting)
 - [Requirements](#requirements)
 - [Contributing](#contributing)
+- [Support](#support)
 - [License](#license)
 
 ## Why RecyclerView
@@ -403,6 +405,12 @@ Give each item a stable `id` that changes only when the item is a different item
 
 Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for how to run the tests,
 and [CHANGELOG.md](CHANGELOG.md) for release notes.
+
+## Support
+
+RecyclerView is free and open source. If it saves you time, you can support its development:
+
+<a href="https://buymeacoffee.com/ulvivali"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" height="41"></a>
 
 ## License
 
