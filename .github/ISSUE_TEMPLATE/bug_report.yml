@@ -1,0 +1,33 @@
+name: Bug report
+description: RecyclerView does not behave as documented.
+labels: [bug]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: What you expected to happen, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: The smallest code that shows the problem.
+      render: swift
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: RecyclerView version
+      placeholder: 1.0.0
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: iOS version, device and Xcode version
+      placeholder: iOS 18.2, iPhone 16, Xcode 16.2
+    validations:
+      required: true
