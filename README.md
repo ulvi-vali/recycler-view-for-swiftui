@@ -102,14 +102,14 @@ RecyclerView is distributed with [Swift Package Manager](https://www.swift.org/d
 
 1. Choose **File › Add Package Dependencies…**
 2. Enter `https://github.com/ulvi-vali/recycler-view-for-swiftui.git`
-3. Select **Up to Next Major Version** from `2.0.0` and add the **RecyclerView** library to your app
+3. Select **Up to Next Major Version** from `2.1.0` and add the **RecyclerView** library to your app
    target.
 
 ### Package.swift
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/ulvi-vali/recycler-view-for-swiftui.git", from: "2.0.0")
+    .package(url: "https://github.com/ulvi-vali/recycler-view-for-swiftui.git", from: "2.1.0")
 ],
 targets: [
     .target(
@@ -465,6 +465,7 @@ Full documentation is written as DocC comments and can be browsed in Xcode with
 | --- | --- |
 | `scrollToItem(at:topOffset:animated:)` | Scrolls until the item's leading edge is `topOffset` from the start of the visible area. |
 | `scrollToItem(at:screenY:animated:)` | Scrolls a vertical list until the item's top edge sits on a line in window coordinates. |
+| `scrollToItemCentered(at:offset:animated:)` | Scrolls until the item sits in the middle of the area the content insets leave visible, `offset` points above it. |
 | `indexOfItem(atScreenY:)` | The first item crossing a horizontal line in window coordinates. |
 | `isUserScrolling` | Whether the user is dragging the list or it is decelerating from a drag. |
 | `setContentInsets(_:animated:duration:)` | Adds scrollable room around the content and insets the scroll indicators to match. |

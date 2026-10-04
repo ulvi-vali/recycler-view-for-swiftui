@@ -91,6 +91,42 @@ final class RecyclerViewControllerTests: XCTestCase {
         XCTAssertEqual(fixture.controller.indexOfItem(atScreenY: 150), 5)
     }
 
+    func testScrollToItemCenteredPutsTheItemInTheMiddle() {
+        let fixture = makeFixture()
+        fixture.controller.scrollToItemCentered(at: 5, animated: false)
+        // Item 5 spans 500–600; its centre at the middle of a 480pt list.
+        XCTAssertEqual(fixture.collectionView.contentOffset.y, 550 - 240)
+    }
+
+    func testScrollToItemCenteredLeavesTheOffsetBelowTheItem() {
+        let fixture = makeFixture()
+        fixture.controller.scrollToItemCentered(at: 5, offset: 50, animated: false)
+        XCTAssertEqual(fixture.collectionView.contentOffset.y, 550 - 240 + 50)
+    }
+
+    func testScrollToItemCenteredStopsAtTheEdgesOfTheContent() {
+        let fixture = makeFixture()
+        fixture.controller.scrollToItemCentered(at: 0, animated: false)
+        XCTAssertEqual(fixture.collectionView.contentOffset.y, 0)
+        fixture.controller.scrollToItemCentered(at: 19, animated: false)
+        XCTAssertEqual(fixture.collectionView.contentOffset.y, 2000 - 480)
+    }
+
+    func testScrollToItemCenteredCentresInTheAreaLeftByTheInsets() {
+        let fixture = makeFixture()
+        fixture.controller.setContentInsets(UIEdgeInsets(top: 80, left: 0, bottom: 0, right: 0))
+        fixture.controller.scrollToItemCentered(at: 5, animated: false)
+        // 400pt are left below the inset: the centre is 200pt into them.
+        XCTAssertEqual(fixture.collectionView.contentOffset.y, 550 - 80 - 200)
+    }
+
+    func testScrollToItemCenteredInAHorizontalList() {
+        let fixture = makeFixture(axis: .horizontal)
+        fixture.controller.scrollToItemCentered(at: 4, animated: false)
+        // Item 4 spans 400–500 in a 320pt-wide list.
+        XCTAssertEqual(fixture.collectionView.contentOffset, CGPoint(x: 450 - 160, y: 0))
+    }
+
     // MARK: - Queries
 
     func testIndexOfItemAtScreenYFollowsTheScrollPosition() {

@@ -6,6 +6,15 @@ All notable changes to this project are documented in this file. The format foll
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-10-04
+
+### Added
+
+- `RecyclerViewController.scrollToItemCentered(at:offset:animated:)` scrolls an item to the middle
+  of the visible area, the part of the list its content insets leave uncovered, as far as the
+  content allows. `offset` places the item's centre that far above the middle (before it in a
+  horizontal list), measured on screen also for reversed lists.
+
 ## [2.0.0] - 2026-10-04
 
 A major release: wrap-content lists measure against their container, rows can be moved, separated
@@ -125,6 +134,7 @@ The first tagged release.
 - The public `RecyclerViewCoordinator` type and `UIHostingController.init(rootView:ignoreSafeArea:)`
   extension, which were implementation details.
 
-[Unreleased]: https://github.com/ulvi-vali/recycler-view-for-swiftui/compare/2.0.0...HEAD
+[Unreleased]: https://github.com/ulvi-vali/recycler-view-for-swiftui/compare/2.1.0...HEAD
+[2.1.0]: https://github.com/ulvi-vali/recycler-view-for-swiftui/compare/2.0.0...2.1.0
 [2.0.0]: https://github.com/ulvi-vali/recycler-view-for-swiftui/compare/1.0.0...2.0.0
 [1.0.0]: https://github.com/ulvi-vali/recycler-view-for-swiftui/releases/tag/1.0.0

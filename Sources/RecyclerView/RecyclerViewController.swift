@@ -86,6 +86,36 @@ public final class RecyclerViewController {
         collectionView.setContentOffset(CGPoint(x: collectionView.contentOffset.x, y: y), animated: animated)
     }
 
+    /// Scrolls until the item sits in the middle of the visible area, as far as the content allows.
+    ///
+    /// The visible area is the list without its content insets, so an item centred under a floating
+    /// bar is centred in what is left uncovered. Use it to bring a selected item into view without
+    /// pressing it against an edge, where the rows around it would be out of sight.
+    ///
+    /// - Parameters:
+    ///   - index: The index of the item. Indices outside the list are ignored.
+    ///   - offset: How far above the middle the item's centre should sit, or before it in a horizontal
+    ///     list. Negative values place it below or after.
+    ///   - animated: Whether to animate the scroll.
+    public func scrollToItemCentered(at index: Int, offset: CGFloat = 0, animated: Bool = true) {
+        guard let collectionView = collectionView, let frame = frameOfItem(at: index, in: collectionView) else { return }
+
+        let insets = collectionView.adjustedContentInset
+        // A reversed list is turned upside down, so "above" on screen is further along its content.
+        let shift = collectionView.transform == .identity ? offset : -offset
+        let point: CGPoint
+        if axis == .horizontal {
+            let visible = collectionView.bounds.width - insets.left - insets.right
+            let x = clamp(frame.midX - insets.left - visible / 2 + shift, to: horizontalOffsetRange(of: collectionView))
+            point = CGPoint(x: x, y: collectionView.contentOffset.y)
+        } else {
+            let visible = collectionView.bounds.height - insets.top - insets.bottom
+            let y = clamp(frame.midY - insets.top - visible / 2 + shift, to: verticalOffsetRange(of: collectionView))
+            point = CGPoint(x: collectionView.contentOffset.x, y: y)
+        }
+        collectionView.setContentOffset(point, animated: animated)
+    }
+
     // MARK: - Insets
 
     /// The list's content insets, by the edges of the list as it appears on screen.
