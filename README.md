@@ -72,6 +72,8 @@ It also keeps Android's vocabulary (linear and grid layout managers, `spanSizeLo
 - **Self-sizing rows.** Vertical lists measure each row once and use that height as the layout
   estimate, so rows do not jump as they scroll into view.
 - **Linear and grid layouts**, vertical or horizontal.
+- **Separators** between the rows of linear lists, with a colour, thickness and insets, drawn without
+  affecting row heights.
 - **Column spans with `spanSizeLookup`.** Decide per item how many columns it takes, like Android's
   `GridLayoutManager.SpanSizeLookup`, so full-width section headers and banners can sit in the same
   grid as regular cells. Spans are clamped to the column count, and an item that does not fit on the
@@ -184,6 +186,27 @@ VStack(spacing: 0) {
 
 On iOS 16 and later SwiftUI asks the list for its size directly. On iOS 13–15 the list measures
 itself once it has been laid out and settles on its height in a second layout pass.
+
+### Separators
+
+Linear lists have no separators by default. Add them with `.separator(...)`:
+
+```swift
+RecyclerView(data: contacts) { contact in
+    ContactRow(contact: contact)
+}
+.separator()                                                      // system colour, hairline
+.separator(color: .gray.opacity(0.3), thickness: 1,
+           insets: EdgeInsets(top: 0, leading: 72, bottom: 0, trailing: 0)) // clear of an avatar
+.separator(drawAfterLast: true)                                   // a line after the last row too
+```
+
+Separators sit between rows, not after the last one unless `drawAfterLast` is set. With spacing in
+the layout, a separator is centred in the gap between two rows; without, it lies along the inside of
+the row's bottom edge, as in a table. Horizontal lists draw them along the trailing edge, inset by
+the top and bottom insets. Separators are placed from the rows' final frames and take no space of
+their own, so row heights and the height of a wrap-content list are the same with or without them.
+Grids have no separators.
 
 ### Grid with column spans
 
@@ -386,6 +409,8 @@ Full documentation is written as DocC comments and can be browsed in Xcode with
 | `.stackFromEnd(_:)` | Anchors items to the bottom while keeping their order. |
 | `.withoutStatusBar(_:)` | Extends the list under the status bar of its own window (iOS 15+). |
 | `.precomputesItemHeights(_:)` | Measures vertical rows up front for stable scrolling. On by default. |
+| `.separator(color:thickness:insets:drawAfterLast:)` | Draws lines between the rows of a linear list. None by default. |
+| `.separator(_:)` | Sets a `RecyclerViewSeparator`, or removes separators with `nil`. |
 | `.showsScrollIndicator(_:)` | Shows or hides the scroll indicator. Hidden by default. |
 | `.withAnimation(_:)` | Animates insertions, removals and moves. On by default. |
 | `.dismissesKeyboardOnScroll(_:)` | Ends editing when the list is dragged: `.list` (or `true`) for text input inside the list, `.window` for anywhere in the window. |

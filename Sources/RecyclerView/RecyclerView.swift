@@ -36,6 +36,7 @@ public struct RecyclerView<Item: Identifiable, Content: View>: View {
     private var onLoadMore: ((Int, Int) -> Void)?
     private var withoutStatusBar = false
     private var keyboardDismissal: RecyclerViewKeyboardDismissal?
+    private var separator: RecyclerViewSeparator?
     private var precomputesItemHeights = true
     private var controller: RecyclerViewController?
 
@@ -141,6 +142,45 @@ public struct RecyclerView<Item: Identifiable, Content: View>: View {
     public func withoutStatusBar(_ enabled: Bool = true) -> Self {
         var copy = self
         copy.withoutStatusBar = enabled
+        return copy
+    }
+
+    /// Draws a line between the rows of a linear list.
+    ///
+    /// Lists have no separators by default. Separators sit between rows, and after the last row only
+    /// when `drawAfterLast` is set. They are drawn over the list without taking space of their own, so
+    /// rows are measured and a wrap-content list is sized exactly as without them. When the spacing
+    /// has room for the line, it is centred in the gap between two rows; otherwise it lies along the
+    /// inside of the row's bottom edge (trailing edge in a horizontal list). Grids have no separators.
+    ///
+    /// ```swift
+    /// RecyclerView(data: contacts) { contact in
+    ///     ContactRow(contact: contact)
+    /// }
+    /// .separator(insets: EdgeInsets(top: 0, leading: 72, bottom: 0, trailing: 0))
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - color: The colour of the line. Defaults to the system separator colour.
+    ///   - thickness: The thickness in points, or `nil` for a hairline one pixel thick.
+    ///   - insets: How far the line stops short of the row's edges: leading and trailing in a vertical
+    ///     list, top and bottom in a horizontal one.
+    ///   - drawAfterLast: Whether a separator follows the last row too.
+    public func separator(
+        color: Color = Color(UIColor.separator),
+        thickness: CGFloat? = nil,
+        insets: EdgeInsets = EdgeInsets(),
+        drawAfterLast: Bool = false
+    ) -> Self {
+        separator(RecyclerViewSeparator(color: color, thickness: thickness, insets: insets, drawsAfterLast: drawAfterLast))
+    }
+
+    /// Draws the given separator between the rows of a linear list, or none when `nil`.
+    ///
+    /// See ``separator(color:thickness:insets:drawAfterLast:)``.
+    public func separator(_ separator: RecyclerViewSeparator?) -> Self {
+        var copy = self
+        copy.separator = separator
         return copy
     }
 
@@ -304,6 +344,7 @@ public struct RecyclerView<Item: Identifiable, Content: View>: View {
             onLoadMore: onLoadMore,
             verticalLayout: verticalLayout,
             keyboardDismissal: keyboardDismissal,
+            separator: separator,
             precomputesItemHeights: precomputesItemHeights,
             controller: controller
         )

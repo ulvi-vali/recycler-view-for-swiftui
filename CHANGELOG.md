@@ -20,6 +20,10 @@ All notable changes to this project are documented in this file. The format foll
 - `RecyclerViewAdapter.notifyItemMoved(from:to:)`.
 - `RecyclerViewAdapter.invalidateMeasurement(at:)` and `invalidateAllMeasurements()`, for rows that
   depend on state outside their item.
+- Separators for linear lists: `.separator(color:thickness:insets:drawAfterLast:)`,
+  `.separator(_:)` and `RecyclerViewSeparator`. None are drawn by default. They sit between rows,
+  after the last row only with `drawAfterLast`, and are placed from the rows' final frames without
+  taking space, so row measurement and wrap-content heights are unaffected.
 
 ### Changed
 

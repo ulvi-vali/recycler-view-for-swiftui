@@ -36,6 +36,17 @@ public class RecyclerViewAdapter<Item: Identifiable, Content: View>: NSObject, U
     }
     /// Whether a vertical linear layout measures its rows up front with ``measuredHeight(for:at:width:)``.
     public var precomputesItemHeights = true
+    /// The line drawn between rows of a linear layout, or `nil` for none.
+    ///
+    /// Separators are placed by the layout ``RecyclerView`` builds; a collection view with a layout of
+    /// your own draws none. After changing it, invalidate the collection view's layout.
+    public var separator: RecyclerViewSeparator? {
+        didSet {
+            if separator != oldValue {
+                refreshVisibleSeparators()
+            }
+        }
+    }
 
     /// The items being displayed.
     ///
@@ -74,6 +85,11 @@ public class RecyclerViewAdapter<Item: Identifiable, Content: View>: NSObject, U
         super.init()
 
         collectionView.register(ViewHolder<Content>.self, forCellWithReuseIdentifier: ViewHolder<Content>.reuseIdentifier)
+        collectionView.register(
+            SeparatorView.self,
+            forSupplementaryViewOfKind: RecyclerViewSeparator.elementKind,
+            withReuseIdentifier: SeparatorView.reuseIdentifier
+        )
         collectionView.dataSource = self
         collectionView.delegate = self
     }
@@ -241,6 +257,37 @@ public class RecyclerViewAdapter<Item: Identifiable, Content: View>: NSObject, U
         CATransaction.commit()
 
         return cell
+    }
+
+    public func collectionView(
+        _ collectionView: UICollectionView,
+        viewForSupplementaryElementOfKind kind: String,
+        at indexPath: IndexPath
+    ) -> UICollectionReusableView {
+        let view = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: SeparatorView.reuseIdentifier, for: indexPath)
+        if let separatorView = view as? SeparatorView {
+            configure(separatorView, at: indexPath)
+        }
+        return view
+    }
+
+    private func configure(_ separatorView: SeparatorView, at indexPath: IndexPath) {
+        guard let separator = separator else {
+            separatorView.isHidden = true
+            return
+        }
+        separatorView.configure(color: separator.color, isHidden: false)
+    }
+
+    /// Brings the separators on screen up to date with ``separator``.
+    func refreshVisibleSeparators() {
+        guard let collectionView = collectionView else { return }
+        let kind = RecyclerViewSeparator.elementKind
+        for indexPath in collectionView.indexPathsForVisibleSupplementaryElements(ofKind: kind) {
+            if let view = collectionView.supplementaryView(forElementKind: kind, at: indexPath) as? SeparatorView {
+                configure(view, at: indexPath)
+            }
+        }
     }
 
     // MARK: - UICollectionViewDelegate

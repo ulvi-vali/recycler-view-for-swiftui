@@ -15,6 +15,7 @@ struct RecyclerViewRepresentable<Item: Identifiable, Content: View>: UIViewRepre
     let onLoadMore: ((Int, Int) -> Void)?
     let verticalLayout: RecyclerViewVerticalLayout
     let keyboardDismissal: RecyclerViewKeyboardDismissal?
+    let separator: RecyclerViewSeparator?
     let precomputesItemHeights: Bool
     let controller: RecyclerViewController?
     /// Receives the measured height of a wrap-content list where SwiftUI cannot ask the list for its
@@ -138,7 +139,9 @@ struct RecyclerViewRepresentable<Item: Identifiable, Content: View>: UIViewRepre
         configureWindowReporting(of: collectionView)
 
         guard let adapter = coordinator.adapter else { return }
-        configure(adapter)
+        if configure(adapter) {
+            collectionView.collectionViewLayout.invalidateLayout()
+        }
         coordinator.animatesUpdates = withAnimation
         defer {
             coordinator.reportWrapContentHeight = makeWrapContentReporter(for: collectionView, coordinator: coordinator)
@@ -264,7 +267,12 @@ struct RecyclerViewRepresentable<Item: Identifiable, Content: View>: UIViewRepre
         collectionView.invalidateIntrinsicContentSize()
     }
 
-    private func configure(_ adapter: RecyclerViewAdapter<Item, Content>) {
+    /// Hands the configuration to the adapter. Returns whether the layout has to be invalidated for
+    /// it, which a change of separator needs.
+    @discardableResult
+    private func configure(_ adapter: RecyclerViewAdapter<Item, Content>) -> Bool {
+        let separatorChanged = adapter.separator != separator
+        adapter.separator = separator
         adapter.content = content
         adapter.onItemClick = onItemClick
         adapter.reverseLayout = reverseLayout
@@ -275,6 +283,7 @@ struct RecyclerViewRepresentable<Item: Identifiable, Content: View>: UIViewRepre
         adapter.onLoadMore = onLoadMore
         adapter.keyboardDismissal = keyboardDismissal
         adapter.precomputesItemHeights = precomputesItemHeights
+        return separatorChanged
     }
 
     private func configureScrolling(of collectionView: UICollectionView) {

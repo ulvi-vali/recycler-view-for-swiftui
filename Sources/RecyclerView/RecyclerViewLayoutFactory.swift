@@ -11,7 +11,7 @@ enum RecyclerViewLayoutFactory {
         let configuration = UICollectionViewCompositionalLayoutConfiguration()
         configuration.scrollDirection = layout.orientation == .horizontal ? .horizontal : .vertical
 
-        return UICollectionViewCompositionalLayout(sectionProvider: { [weak adapter] _, environment in
+        let compositionalLayout = RecyclerCompositionalLayout(sectionProvider: { [weak adapter] _, environment in
             guard let adapter = adapter else { return nil }
 
             switch layout {
@@ -30,6 +30,15 @@ enum RecyclerViewLayoutFactory {
                 return verticalGridSection(adapter: adapter, spanCount: spanCount, spacing: spacing)
             }
         }, configuration: configuration)
+
+        if case .linear(let orientation, let spacing) = layout {
+            compositionalLayout.separators = RecyclerCompositionalLayout.Separators(
+                axis: orientation,
+                spacing: spacing,
+                separator: { [weak adapter] in adapter?.separator }
+            )
+        }
+        return compositionalLayout
     }
 
     private static func verticalLinearSection<Item: Identifiable, Content: View>(

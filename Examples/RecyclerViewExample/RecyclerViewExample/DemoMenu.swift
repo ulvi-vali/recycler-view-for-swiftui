@@ -28,7 +28,7 @@ enum Demo: String, CaseIterable, Identifiable, Hashable {
         case .horizontalList: return "Chips kept in view by a controller, wrap-content cards"
         case .pagination: return "onLoadMore, ending on a short page"
         case .chat: return "stackFromEnd and dismissesKeyboardOnScroll"
-        case .scrollController: return "Section tabs following the list, a floating bottom bar"
+        case .scrollController: return "Section tabs following the list, separators, a floating bottom bar"
         }
     }
 

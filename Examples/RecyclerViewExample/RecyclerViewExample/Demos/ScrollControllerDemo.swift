@@ -37,6 +37,7 @@ struct ScrollControllerDemo: View {
             RecyclerView(data: rows) { row in
                 MenuRowView(row: row)
             }
+            .separator(insets: EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 0))
             .controller(menuController)
             .onScroll { _ in
                 followScroll()

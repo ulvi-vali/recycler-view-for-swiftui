@@ -41,6 +41,11 @@ struct ArticlesScreen: View {
 - ``RecyclerViewLayoutManager``
 - ``RecyclerViewVerticalLayout``
 
+### Appearance and behaviour
+
+- ``RecyclerViewSeparator``
+- ``RecyclerViewKeyboardDismissal``
+
 ### Scrolling programmatically
 
 - ``RecyclerViewController``
