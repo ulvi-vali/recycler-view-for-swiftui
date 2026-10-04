@@ -14,6 +14,10 @@ All notable changes to this project are documented in this file. The format foll
 - `.dismissesKeyboardOnScroll(_:)` accepting a `RecyclerViewKeyboardDismissal`: `.list` ends editing
   in text input inside the list, `.window` anywhere in the list's window.
   `RecyclerViewAdapter.keyboardDismissal` sets the same for an adapter.
+- Move detection. Items that keep their `id` but change position are moved with
+  `moveItem(at:to:)` in the same batch update as deletions and insertions, keeping their cells,
+  instead of being deleted and inserted again.
+- `RecyclerViewAdapter.notifyItemMoved(from:to:)`.
 
 ### Changed
 

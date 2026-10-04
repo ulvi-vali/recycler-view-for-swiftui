@@ -76,7 +76,8 @@ It also keeps Android's vocabulary (linear and grid layout managers, `spanSizeLo
   `GridLayoutManager.SpanSizeLookup`, so full-width section headers and banners can sit in the same
   grid as regular cells. Spans are clamped to the column count, and an item that does not fit on the
   current row starts a new one.
-- **Animated updates.** Changes are diffed by `id` off the main thread and applied as batch updates.
+- **Animated updates.** Changes are diffed by `id` off the main thread and applied as batch updates,
+  with reordered items moved rather than deleted and inserted again.
 - **Pagination** with a single callback.
 - **Chat layouts** with `stackFromEnd` and `reverseLayout`.
 - **Programmatic scrolling** with `RecyclerViewController`: scroll to an item with an offset, find the
@@ -220,6 +221,21 @@ RecyclerView(data: feed, layout: .grid(spanCount: 2, spacing: 12)) { item in
 .verticalLayout(.matchParent)
 ```
 
+### Updates and moves
+
+Assign a new array and the list works out what changed by comparing `id`s: rows that left are
+deleted, new rows are inserted, and rows that changed position are moved, keeping their cells and
+animating to their new place. All three are applied in one batch update.
+
+```swift
+model.tasks.sort { $0.dueDate < $1.dueDate }   // rows slide into their new order
+model.tasks.insert(newTask, at: 0)             // inserted
+model.tasks.removeAll { $0.isDone }            // deleted
+```
+
+Give each item a stable `id`. An `id` that changes with the item's position or contents turns every
+move into a deletion and an insertion.
+
 ### Infinite scrolling and pagination
 
 ```swift
@@ -328,7 +344,7 @@ RecyclerView(data: tags, layout: .linear(orientation: .horizontal)) { index, tag
 .dismissesKeyboardOnScroll(.window) // on drag, end editing anywhere in the window
 .withoutStatusBar()              // draw the list under the status bar, for a full-bleed header
 .showsScrollIndicator(true)      // show the scroll indicator
-.withAnimation(false)            // apply insertions and removals without animation
+.withAnimation(false)            // apply insertions, removals and moves without animation
 .precomputesItemHeights(false)   // skip up-front row measurement for very large data sets
 ```
 
@@ -371,7 +387,7 @@ Full documentation is written as DocC comments and can be browsed in Xcode with
 | `.withoutStatusBar(_:)` | Extends the list under the status bar of its own window (iOS 15+). |
 | `.precomputesItemHeights(_:)` | Measures vertical rows up front for stable scrolling. On by default. |
 | `.showsScrollIndicator(_:)` | Shows or hides the scroll indicator. Hidden by default. |
-| `.withAnimation(_:)` | Animates insertions and removals. On by default. |
+| `.withAnimation(_:)` | Animates insertions, removals and moves. On by default. |
 | `.dismissesKeyboardOnScroll(_:)` | Ends editing when the list is dragged: `.list` (or `true`) for text input inside the list, `.window` for anywhere in the window. |
 | `.controller(_:)` | Attaches a `RecyclerViewController`. |
 | `.onItemClick(_:)` | Called with the index and item when a row is tapped. |
@@ -404,8 +420,9 @@ Full documentation is written as DocC comments and can be browsed in Xcode with
 - `RecyclerViewAdapter` is the data source and delegate. Each `ViewHolder` cell hosts the row with
   `UIHostingConfiguration` on iOS 16 and later, or an embedded `UIHostingController` on iOS 13–15.
 - When `data` changes, the old and new identities are diffed on a background queue and applied with
-  `performBatchUpdates`. An update that arrives first supersedes a diff still in flight, and each diff
-  is measured from the items the collection view actually holds.
+  `performBatchUpdates` as deletions, insertions and moves. Only integer stand-ins for the
+  identities cross to the background queue. An update that arrives later supersedes a diff still in
+  flight, and each diff is measured from the items the collection view actually holds.
 - Vertical linear lists measure each row once per item and width, the same way the cell sizes itself,
   and pass the result to the layout as the estimated height.
 - Reversed layouts rotate the collection view by 180° and rotate each cell back.

@@ -138,6 +138,13 @@ public class RecyclerViewAdapter<Item: Identifiable, Content: View>: NSObject, U
         collectionView?.deleteItems(at: [IndexPath(item: index, section: 0)])
     }
 
+    /// Moves the item at `from` to `to`, where it must already be in ``items``.
+    ///
+    /// The item keeps its cell, which animates to its new position.
+    public func notifyItemMoved(from: Int, to: Int) {
+        collectionView?.moveItem(at: IndexPath(item: from, section: 0), to: IndexPath(item: to, section: 0))
+    }
+
     /// Rebinds the item at `index`, reloading it if its cell is not on screen.
     public func notifyItemChanged(at index: Int) {
         guard let collectionView = collectionView else { return }

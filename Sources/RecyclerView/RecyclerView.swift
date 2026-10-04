@@ -47,8 +47,8 @@ public struct RecyclerView<Item: Identifiable, Content: View>: View {
     /// Creates a list that builds a row for each item.
     ///
     /// - Parameters:
-    ///   - data: The items to display. Items are matched across updates by their `id`, so insertions
-    ///     and removals are applied as batch updates instead of reloading the whole list.
+    ///   - data: The items to display. Items are matched across updates by their `id`, so insertions,
+    ///     removals and moves are applied as batch updates instead of reloading the whole list.
     ///   - layout: How the items are arranged. Defaults to a vertical linear list.
     ///   - content: A view builder that creates the row for an item.
     public init(

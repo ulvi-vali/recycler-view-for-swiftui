@@ -67,6 +67,56 @@ final class RecyclerViewUpdateTests: XCTestCase {
         XCTAssertTrue(settledAgain)
     }
 
+    // MARK: - Moves
+
+    /// Updates to `ids` and waits for the batch update, then checks that every visible cell shows the
+    /// item at its position. An inconsistent batch update would raise instead.
+    private func assertSettles(_ hosted: Hosted, on ids: [Int], file: StaticString = #filePath, line: UInt = #line) throws {
+        let adapter = try XCTUnwrap(hosted.collectionView.dataSource as? RecyclerViewAdapter<TestItem, Text>, file: file, line: line)
+        hosted.update(to: makeList(ids: ids))
+
+        let settled = waitUntil {
+            adapter.items.map(\.id) == ids && hosted.collectionView.numberOfItems(inSection: 0) == ids.count
+        }
+        XCTAssertTrue(settled, "Expected \(ids), got \(adapter.items.map(\.id))", file: file, line: line)
+
+        hosted.collectionView.layoutIfNeeded()
+        for case let cell as ViewHolder<Text> in hosted.collectionView.visibleCells {
+            let indexPath = try XCTUnwrap(hosted.collectionView.indexPath(for: cell), file: file, line: line)
+            XCTAssertEqual(cell.itemID, String(ids[indexPath.item]), "Cell at \(indexPath.item)", file: file, line: line)
+        }
+    }
+
+    func testReorderingMovesRows() throws {
+        let hosted = try host(makeList(ids: Array(0..<10)))
+        try assertSettles(hosted, on: [9, 0, 1, 2, 3, 4, 5, 6, 7, 8])
+        try assertSettles(hosted, on: Array((0..<10).reversed()))
+        try assertSettles(hosted, on: [0, 2, 1, 3, 5, 4, 6, 8, 7, 9])
+    }
+
+    func testMoveTogetherWithInsertions() throws {
+        let hosted = try host(makeList(ids: Array(0..<6)))
+        try assertSettles(hosted, on: [5, 0, 100, 1, 2, 101, 3, 4])
+    }
+
+    func testMoveTogetherWithDeletions() throws {
+        let hosted = try host(makeList(ids: Array(0..<8)))
+        try assertSettles(hosted, on: [7, 0, 2, 4, 3])
+    }
+
+    func testMovesInsertionsAndDeletionsInOneUpdate() throws {
+        let hosted = try host(makeList(ids: Array(0..<12)))
+        try assertSettles(hosted, on: [11, 3, 200, 1, 0, 5, 201, 9, 7])
+    }
+
+    func testAnimatedMovesSettle() throws {
+        let hosted = try host(makeList(ids: Array(0..<10)).withAnimation(true))
+        let adapter = try XCTUnwrap(hosted.collectionView.dataSource as? RecyclerViewAdapter<TestItem, Text>)
+        let ids = [3, 0, 1, 2, 50, 4, 6, 9, 8]
+        hosted.update(to: makeList(ids: ids).withAnimation(true))
+        XCTAssertTrue(waitUntil { adapter.items.map(\.id) == ids && hosted.collectionView.numberOfItems(inSection: 0) == ids.count })
+    }
+
     func testChangedValuesWithTheSameIdentityReachTheList() throws {
         let hosted = try host(makeList([TestItem(id: 1, title: "Before")]))
         let adapter = try XCTUnwrap(hosted.collectionView.dataSource as? RecyclerViewAdapter<TestItem, Text>)

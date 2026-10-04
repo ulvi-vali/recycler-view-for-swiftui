@@ -13,7 +13,8 @@ public class ViewHolder<Content: View>: UICollectionViewCell {
     }
 
     private var hostingController: UIHostingController<Content>?
-    private var itemID = "unknown"
+    /// The identity of the item the cell was last bound to.
+    private(set) var itemID = "unknown"
 
     /// Displays `view` in the cell.
     ///

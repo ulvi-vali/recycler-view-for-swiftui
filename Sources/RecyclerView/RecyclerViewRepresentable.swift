@@ -229,14 +229,21 @@ struct RecyclerViewRepresentable<Item: Identifiable, Content: View>: UIViewRepre
         let performUpdates = {
             collectionView.performBatchUpdates({
                 adapter.items = newData
+                // UIKit resolves a batch as a whole: deletions and move sources are read against the
+                // old items, insertions and move destinations against the new ones, whatever order
+                // they are issued in. ListDiff produces positions on exactly those terms.
                 if !diff.deletions.isEmpty {
                     collectionView.deleteItems(at: diff.deletions)
                 }
                 if !diff.insertions.isEmpty {
                     collectionView.insertItems(at: diff.insertions)
                 }
+                for move in diff.moves {
+                    collectionView.moveItem(at: move.from, to: move.to)
+                }
             }, completion: { _ in
-                // Rows that stayed in place keep their cells, which may show stale values.
+                // Rows that stayed in place or moved keep their cells, which may show stale values,
+                // such as content built from an index that has changed.
                 rebindVisibleCells(of: collectionView, adapter: adapter)
                 collectionView.collectionViewLayout.invalidateLayout()
             })

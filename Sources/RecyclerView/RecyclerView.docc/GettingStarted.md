@@ -5,8 +5,9 @@ Display a list, choose a layout, and respond to taps, scrolling and pagination.
 ## Overview
 
 A ``RecyclerView/RecyclerView`` takes an array of `Identifiable` items and a view builder for a row.
-Identities matter: when the array changes, items are matched by `id`, and insertions and removals
-are applied as batch updates instead of reloading the list.
+Identities matter: when the array changes, items are matched by `id`, and insertions, removals and
+moves are applied as batch updates instead of reloading the list. A reordered item keeps its cell
+and animates to its new position.
 
 ### Display a list
 
