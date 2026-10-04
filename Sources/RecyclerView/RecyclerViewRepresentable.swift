@@ -14,7 +14,7 @@ struct RecyclerViewRepresentable<Item: Identifiable, Content: View>: UIViewRepre
     let onScroll: ((CGPoint) -> Void)?
     let onLoadMore: ((Int, Int) -> Void)?
     let verticalLayout: RecyclerViewVerticalLayout
-    let dismissesKeyboardOnScroll: Bool
+    let keyboardDismissal: RecyclerViewKeyboardDismissal?
     let precomputesItemHeights: Bool
     let controller: RecyclerViewController?
     /// Receives the measured height of a wrap-content list where SwiftUI cannot ask the list for its
@@ -258,7 +258,7 @@ struct RecyclerViewRepresentable<Item: Identifiable, Content: View>: UIViewRepre
         adapter.pageSize = pageSize
         adapter.onScroll = onScroll
         adapter.onLoadMore = onLoadMore
-        adapter.dismissesKeyboardOnScroll = dismissesKeyboardOnScroll
+        adapter.keyboardDismissal = keyboardDismissal
         adapter.precomputesItemHeights = precomputesItemHeights
     }
 

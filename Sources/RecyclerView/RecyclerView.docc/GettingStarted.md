@@ -86,9 +86,13 @@ RecyclerView(data: messages, layout: .linear(spacing: 6)) { message in
     MessageBubble(message: message)
 }
 .stackFromEnd(true)
-.dismissesKeyboardOnScroll()
+.dismissesKeyboardOnScroll(.window) // the composer is outside the list
 .verticalLayout(.matchParent)
 ```
+
+``RecyclerView/RecyclerView/dismissesKeyboardOnScroll(_:)-(Bool)`` without an argument only ends
+editing in text fields inside the list. Pass ``RecyclerViewKeyboardDismissal/window`` when the text
+input sits outside it, as a chat composer or a search field does.
 
 When messages are ordered newest first, use ``RecyclerView/RecyclerView/reverseLayout(_:)`` instead.
 

@@ -11,7 +11,8 @@ struct ChatDemo: View {
                 MessageBubble(message: message)
             }
             .stackFromEnd(true)
-            .dismissesKeyboardOnScroll()
+            // The composer sits outside the list, so the whole window ends editing.
+            .dismissesKeyboardOnScroll(.window)
             .verticalLayout(.matchParent)
 
             HStack(spacing: 8) {

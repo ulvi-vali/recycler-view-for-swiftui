@@ -24,8 +24,16 @@ public class RecyclerViewAdapter<Item: Identifiable, Content: View>: NSObject, U
     public var pageSize = RecyclerViewDefaults.pageSize
     /// Called with the content offset whenever the collection view scrolls.
     public var onScroll: ((CGPoint) -> Void)?
-    /// Whether dragging the collection view dismisses the keyboard.
-    public var dismissesKeyboardOnScroll = false
+    /// Which text input dragging the collection view ends, or `nil` to leave the keyboard alone.
+    public var keyboardDismissal: RecyclerViewKeyboardDismissal?
+
+    /// Whether dragging the collection view dismisses the keyboard of text input inside it.
+    ///
+    /// Setting `true` sets ``keyboardDismissal`` to ``RecyclerViewKeyboardDismissal/list``.
+    public var dismissesKeyboardOnScroll: Bool {
+        get { keyboardDismissal != nil }
+        set { keyboardDismissal = newValue ? .list : nil }
+    }
     /// Whether a vertical linear layout measures its rows up front with ``measuredHeight(for:at:width:)``.
     public var precomputesItemHeights = true
 
@@ -212,8 +220,15 @@ public class RecyclerViewAdapter<Item: Identifiable, Content: View>: NSObject, U
     }
 
     public func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
-        guard dismissesKeyboardOnScroll else { return }
         // Resigning the first responder lets the keyboard leave with the system's own transition.
-        scrollView.window?.endEditing(true)
+        switch keyboardDismissal {
+        case .list:
+            // Looks for the first responder among the collection view's own subviews only.
+            scrollView.endEditing(true)
+        case .window:
+            scrollView.window?.endEditing(true)
+        case nil:
+            break
+        }
     }
 }

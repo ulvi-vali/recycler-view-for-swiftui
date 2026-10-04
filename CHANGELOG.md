@@ -11,8 +11,15 @@ All notable changes to this project are documented in this file. The format foll
 - `RecyclerViewController.setContentInsets(_:animated:duration:)` sets the content inset on every
   edge and insets both scroll indicators to match, and `contentInsets` reads it back.
   `setBottomInset(_:animated:duration:)` remains, built on top of it.
+- `.dismissesKeyboardOnScroll(_:)` accepting a `RecyclerViewKeyboardDismissal`: `.list` ends editing
+  in text input inside the list, `.window` anywhere in the list's window.
+  `RecyclerViewAdapter.keyboardDismissal` sets the same for an adapter.
 
 ### Changed
+
+- `.dismissesKeyboardOnScroll()` and `.dismissesKeyboardOnScroll(true)` only end editing in text
+  input inside the list, instead of ending editing in the whole window. Pass `.window` for the old
+  behaviour, for example when a search field or chat composer sits outside the list.
 
 - The package builds in the Swift 6 language mode with strict concurrency checking, and needs
   Xcode 16 (swift-tools-version 6.0). Apps in the Swift 5 language mode can still use it.

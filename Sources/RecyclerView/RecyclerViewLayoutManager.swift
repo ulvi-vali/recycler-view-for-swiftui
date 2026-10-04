@@ -32,6 +32,24 @@ public enum RecyclerViewLayoutManager: Equatable, Sendable {
     }
 }
 
+/// Which text input a ``RecyclerView`` ends when the user starts dragging it.
+///
+/// Pass it to `RecyclerView.dismissesKeyboardOnScroll(_:)`, or set
+/// ``RecyclerViewAdapter/keyboardDismissal`` on an adapter.
+public enum RecyclerViewKeyboardDismissal: Equatable, Sendable {
+    /// Ends editing only in a text field or text view inside the list, such as one in a row.
+    ///
+    /// Text input elsewhere on screen keeps the keyboard, so dragging a list does not close a
+    /// search field or composer that merely sits next to it.
+    case list
+
+    /// Ends editing anywhere in the list's window.
+    ///
+    /// Suited to a list shown together with its own input outside the list, such as search results
+    /// under a search field or a chat transcript above its composer.
+    case window
+}
+
 /// How a ``RecyclerView`` sizes itself vertically.
 public enum RecyclerViewVerticalLayout: Equatable, Sendable {
     /// Fills the height its container proposes, like Android's `match_parent`.

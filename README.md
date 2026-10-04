@@ -248,7 +248,7 @@ RecyclerView(data: messages, layout: .linear(spacing: 6)) { message in
     MessageBubble(message: message)
 }
 .stackFromEnd(true)
-.dismissesKeyboardOnScroll()
+.dismissesKeyboardOnScroll(.window) // the composer is outside the list
 .verticalLayout(.matchParent)
 ```
 
@@ -324,7 +324,8 @@ RecyclerView(data: tags, layout: .linear(orientation: .horizontal)) { index, tag
 ### More options
 
 ```swift
-.dismissesKeyboardOnScroll()     // dismiss the keyboard when the list is dragged
+.dismissesKeyboardOnScroll()     // on drag, end editing in text fields inside the list
+.dismissesKeyboardOnScroll(.window) // on drag, end editing anywhere in the window
 .withoutStatusBar()              // draw the list under the status bar, for a full-bleed header
 .showsScrollIndicator(true)      // show the scroll indicator
 .withAnimation(false)            // apply insertions and removals without animation
@@ -371,7 +372,7 @@ Full documentation is written as DocC comments and can be browsed in Xcode with
 | `.precomputesItemHeights(_:)` | Measures vertical rows up front for stable scrolling. On by default. |
 | `.showsScrollIndicator(_:)` | Shows or hides the scroll indicator. Hidden by default. |
 | `.withAnimation(_:)` | Animates insertions and removals. On by default. |
-| `.dismissesKeyboardOnScroll(_:)` | Dismisses the keyboard when the list is dragged. |
+| `.dismissesKeyboardOnScroll(_:)` | Ends editing when the list is dragged: `.list` (or `true`) for text input inside the list, `.window` for anywhere in the window. |
 | `.controller(_:)` | Attaches a `RecyclerViewController`. |
 | `.onItemClick(_:)` | Called with the index and item when a row is tapped. |
 | `.onScroll(_:)` | Called with the content offset as the list scrolls. |

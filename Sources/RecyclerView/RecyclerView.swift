@@ -35,7 +35,7 @@ public struct RecyclerView<Item: Identifiable, Content: View>: View {
     private var onScroll: ((CGPoint) -> Void)?
     private var onLoadMore: ((Int, Int) -> Void)?
     private var withoutStatusBar = false
-    private var dismissesKeyboardOnScroll = false
+    private var keyboardDismissal: RecyclerViewKeyboardDismissal?
     private var precomputesItemHeights = true
     private var controller: RecyclerViewController?
 
@@ -175,13 +175,32 @@ public struct RecyclerView<Item: Identifiable, Content: View>: View {
         return copy
     }
 
-    /// Dismisses the keyboard when the user starts dragging the list.
+    /// Dismisses the keyboard when the user starts dragging the list, if a text field inside the list
+    /// is being edited.
     ///
-    /// Suited to search results, where the keyboard hides much of what was found. Off by default,
-    /// because a list that contains text fields of its own should not close them.
+    /// Equivalent to `dismissesKeyboardOnScroll(.list)` when `enabled`. Text input outside the list
+    /// keeps the keyboard; to dismiss it as well, as for search results under a search field, pass
+    /// ``RecyclerViewKeyboardDismissal/window``. Off by default.
     public func dismissesKeyboardOnScroll(_ enabled: Bool = true) -> Self {
         var copy = self
-        copy.dismissesKeyboardOnScroll = enabled
+        copy.keyboardDismissal = enabled ? .list : nil
+        return copy
+    }
+
+    /// Dismisses the keyboard when the user starts dragging the list.
+    ///
+    /// ```swift
+    /// RecyclerView(data: results) { result in
+    ///     ResultRow(result: result)
+    /// }
+    /// .dismissesKeyboardOnScroll(.window) // also closes the search field above the list
+    /// ```
+    ///
+    /// - Parameter scope: ``RecyclerViewKeyboardDismissal/list`` ends editing only in text input
+    ///   inside the list; ``RecyclerViewKeyboardDismissal/window`` ends it anywhere in the window.
+    public func dismissesKeyboardOnScroll(_ scope: RecyclerViewKeyboardDismissal) -> Self {
+        var copy = self
+        copy.keyboardDismissal = scope
         return copy
     }
 
@@ -281,7 +300,7 @@ public struct RecyclerView<Item: Identifiable, Content: View>: View {
             onScroll: onScroll,
             onLoadMore: onLoadMore,
             verticalLayout: verticalLayout,
-            dismissesKeyboardOnScroll: dismissesKeyboardOnScroll,
+            keyboardDismissal: keyboardDismissal,
             precomputesItemHeights: precomputesItemHeights,
             controller: controller
         )
