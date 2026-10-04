@@ -20,6 +20,8 @@ struct RecyclerViewRepresentable<Item: Identifiable, Content: View>: UIViewRepre
     /// Receives the measured height of a wrap-content list where SwiftUI cannot ask the list for its
     /// size directly, before iOS 16. `nil` when the list answers `sizeThatFits` itself.
     var onWrapContentHeight: ((CGFloat) -> Void)?
+    /// Receives the safe-area insets of the list's own window, for lists drawn under the status bar.
+    var onWindowSafeAreaInsets: ((UIEdgeInsets) -> Void)?
 
     func makeCoordinator() -> RecyclerViewCoordinator<Item, Content> {
         RecyclerViewCoordinator()
@@ -74,7 +76,21 @@ struct RecyclerViewRepresentable<Item: Identifiable, Content: View>: UIViewRepre
             coordinator?.reportWrapContentHeight?()
         }
         coordinator.reportWrapContentHeight = makeWrapContentReporter(for: collectionView, coordinator: coordinator)
+        configureWindowReporting(of: collectionView)
         return collectionView
+    }
+
+    private func configureWindowReporting(of collectionView: UIRecyclerView) {
+        guard let onWindowSafeAreaInsets = onWindowSafeAreaInsets else {
+            collectionView.onWindowSafeAreaInsetsChange = nil
+            return
+        }
+        collectionView.onWindowSafeAreaInsetsChange = { insets in
+            // Reported on a later turn: this runs during layout, when SwiftUI state must not change.
+            Task { @MainActor in
+                onWindowSafeAreaInsets(insets)
+            }
+        }
     }
 
     /// Before iOS 16 SwiftUI cannot ask a representable for its size, so the list measures itself at
@@ -119,6 +135,7 @@ struct RecyclerViewRepresentable<Item: Identifiable, Content: View>: UIViewRepre
         controller?.attach(to: collectionView, axis: layout.orientation)
         applyTransform(to: collectionView)
         configureScrolling(of: collectionView)
+        configureWindowReporting(of: collectionView)
 
         guard let adapter = coordinator.adapter else { return }
         configure(adapter)

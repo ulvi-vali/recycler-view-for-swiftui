@@ -24,6 +24,9 @@ All notable changes to this project are documented in this file. The format foll
 
 - Wrap-content lists narrower than the screen, such as lists inside cards or split views, were
   measured at the screen's width and came out too short.
+- `withoutStatusBar` read the safe area of the app's key window, which is the wrong window for a list
+  in a secondary window or scene. It now reads the list's own window, falling back to the key window
+  only until the list is in a window.
 
 ## [1.0.0] - 2026-09-10
 

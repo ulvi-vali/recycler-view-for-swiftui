@@ -9,6 +9,13 @@ public class UIRecyclerView: UICollectionView {
     var onWidthChange: ((CGFloat) -> Void)?
     private var lastLaidOutWidth: CGFloat?
 
+    /// Called with the safe-area insets of the window the collection view is in, when it moves to a
+    /// window and whenever those insets change.
+    var onWindowSafeAreaInsetsChange: ((UIEdgeInsets) -> Void)? {
+        didSet { reportWindowSafeAreaInsets() }
+    }
+    private var reportedWindowSafeAreaInsets: UIEdgeInsets?
+
     override public func layoutSubviews() {
         super.layoutSubviews()
 
@@ -17,6 +24,26 @@ public class UIRecyclerView: UICollectionView {
             lastLaidOutWidth = width
             onWidthChange?(width)
         }
+        reportWindowSafeAreaInsets()
+    }
+
+    override public func didMoveToWindow() {
+        super.didMoveToWindow()
+        reportWindowSafeAreaInsets()
+    }
+
+    override public func safeAreaInsetsDidChange() {
+        super.safeAreaInsetsDidChange()
+        reportWindowSafeAreaInsets()
+    }
+
+    private func reportWindowSafeAreaInsets() {
+        guard let onWindowSafeAreaInsetsChange = onWindowSafeAreaInsetsChange, let window = window else { return }
+
+        let insets = window.safeAreaInsets
+        guard insets != reportedWindowSafeAreaInsets else { return }
+        reportedWindowSafeAreaInsets = insets
+        onWindowSafeAreaInsetsChange(insets)
     }
 
     override public func action(for layer: CALayer, forKey event: String) -> CAAction? {

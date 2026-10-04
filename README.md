@@ -358,7 +358,7 @@ Full documentation is written as DocC comments and can be browsed in Xcode with
 | `.verticalLayout(_:)` | `.wrapContent` (default) sizes to the rows; `.matchParent` fills the container. |
 | `.reverseLayout(_:)` | Flips the list so the first item is at the bottom. |
 | `.stackFromEnd(_:)` | Anchors items to the bottom while keeping their order. |
-| `.withoutStatusBar(_:)` | Extends the list under the status bar (iOS 15+). |
+| `.withoutStatusBar(_:)` | Extends the list under the status bar of its own window (iOS 15+). |
 | `.precomputesItemHeights(_:)` | Measures vertical rows up front for stable scrolling. On by default. |
 | `.showsScrollIndicator(_:)` | Shows or hides the scroll indicator. Hidden by default. |
 | `.withAnimation(_:)` | Animates insertions and removals. On by default. |

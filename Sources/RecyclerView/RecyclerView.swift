@@ -41,6 +41,8 @@ public struct RecyclerView<Item: Identifiable, Content: View>: View {
 
     /// The height a wrap-content list measured for itself, before iOS 16.
     @State private var legacyWrapContentHeight: CGFloat?
+    /// The top safe-area inset of the window the list is in, once it is in one.
+    @State private var windowTopInset: CGFloat?
 
     /// Creates a list that builds a row for each item.
     ///
@@ -131,9 +133,11 @@ public struct RecyclerView<Item: Identifiable, Content: View>: View {
 
     /// Extends the list up under the status bar.
     ///
-    /// The list is shifted up by the window's top safe-area inset so that a full-bleed header can sit
-    /// behind the status bar. Takes effect on iOS 15 and later. Cells ignore the safe area, so rows do
-    /// not grow as they scroll beneath the status bar.
+    /// The list is shifted up by the top safe-area inset of its own window so that a full-bleed header
+    /// can sit behind the status bar. The inset is read from the window the list is shown in, not the
+    /// app's key window, so a list in a secondary window or scene is shifted by the right amount;
+    /// before the list is in a window, the key window's inset stands in. Takes effect on iOS 15 and
+    /// later. Cells ignore the safe area, so rows do not grow as they scroll beneath the status bar.
     public func withoutStatusBar(_ enabled: Bool = true) -> Self {
         var copy = self
         copy.withoutStatusBar = enabled
@@ -282,6 +286,9 @@ public struct RecyclerView<Item: Identifiable, Content: View>: View {
             controller: controller
         )
         representable.onWrapContentHeight = onWrapContentHeight
+        if withoutStatusBar {
+            representable.onWindowSafeAreaInsets = { windowTopInset = $0.top }
+        }
         return representable.padding(.top, topOffset)
     }
 
@@ -298,11 +305,15 @@ public struct RecyclerView<Item: Identifiable, Content: View>: View {
         reversesData ? data.count - 1 - index : index
     }
 
+    /// Shifts the list up under the status bar by its own window's top safe-area inset.
+    ///
+    /// The inset is read from the window the list is in, which is reported once the list is in one.
+    /// Until then the key window of the app's scenes stands in for it, so the first frame is usually
+    /// already in place.
     private var topOffset: CGFloat {
         guard withoutStatusBar, #available(iOS 15.0, *) else { return 0 }
-        return -WindowMetrics.safeAreaInsets.top
+        return -(windowTopInset ?? WindowMetrics.safeAreaInsets.top)
     }
-
 }
 
 /// How a ``RecyclerViewVerticalLayout/wrapContent`` list learns the space it is given.
