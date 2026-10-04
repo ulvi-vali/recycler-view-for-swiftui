@@ -82,6 +82,56 @@ public struct RecyclerView<Item: Identifiable, Content: View>: View {
         self.content = content
     }
 
+    /// Creates a list from an array of optionals, showing a placeholder row for each `nil` element.
+    ///
+    /// Each element is wrapped in a ``RecyclerViewItem``: a value keeps its own identity, and a `nil`
+    /// element becomes a placeholder identified by its position. The row builder receives the
+    /// optional back. Callbacks such as ``onItemClick(_:)`` and ``spanSizeLookup(_:)`` receive the
+    /// ``RecyclerViewItem``; read its ``RecyclerViewItem/value``.
+    ///
+    /// ```swift
+    /// RecyclerView(data: model.isLoading ? Array(repeating: nil, count: 6) : model.articles) { article in
+    ///     if let article = article {
+    ///         ArticleRow(article: article)
+    ///     } else {
+    ///         ArticleRow.skeleton
+    ///     }
+    /// }
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - data: The values to display, with `nil` for each placeholder.
+    ///   - layout: How the items are arranged. Defaults to a vertical linear list.
+    ///   - content: A view builder that creates the row for a value, or for a placeholder from `nil`.
+    public init<Value>(
+        data: [Value?],
+        layout: RecyclerViewLayoutManager = .linear(),
+        @ViewBuilder content: @escaping (_ value: Value?) -> Content
+    ) where Item == RecyclerViewItem<Value> {
+        self.init(data: RecyclerViewItem.items(from: data), layout: layout) { _, item in
+            content(item.value)
+        }
+    }
+
+    /// Creates a list from an array of optionals, building each row from its index and the optional.
+    ///
+    /// `nil` elements become placeholders identified by their position, as with the initializer whose
+    /// row builder takes only the optional.
+    ///
+    /// - Parameters:
+    ///   - data: The values to display, with `nil` for each placeholder.
+    ///   - layout: How the items are arranged. Defaults to a vertical linear list.
+    ///   - content: A view builder that creates the row at an index, from a value or from `nil`.
+    public init<Value>(
+        data: [Value?],
+        layout: RecyclerViewLayoutManager = .linear(),
+        @ViewBuilder content: @escaping (_ index: Int, _ value: Value?) -> Content
+    ) where Item == RecyclerViewItem<Value> {
+        self.init(data: RecyclerViewItem.items(from: data), layout: layout) { index, item in
+            content(index, item.value)
+        }
+    }
+
     // MARK: - Layout
 
     /// Sets how many columns each item spans in a vertical grid.

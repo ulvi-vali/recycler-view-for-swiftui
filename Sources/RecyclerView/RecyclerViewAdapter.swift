@@ -101,8 +101,9 @@ public class RecyclerViewAdapter<Item: Identifiable, Content: View>: NSObject, U
 
     /// A string identifying `item`, used to key cached row heights and passed to its cell.
     ///
-    /// Items without an identity, such as `nil` placeholders in an array of optionals, are identified
-    /// by their index instead.
+    /// Items whose `id` is an optional that is `nil` have no identity of their own and are identified
+    /// by their index instead. For placeholder rows, prefer ``RecyclerViewItem``, which gives each
+    /// placeholder an identity.
     public func getItemIDString(for item: Item, at index: Int) -> String {
         let idString = String(describing: item.id)
         if idString == "nil" || idString.isEmpty || idString == "Optional(nil)" {

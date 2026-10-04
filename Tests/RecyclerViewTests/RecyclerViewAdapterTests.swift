@@ -91,13 +91,27 @@ final class RecyclerViewAdapterTests: XCTestCase {
         XCTAssertEqual(adapter.getItemIDString(for: TestItem(id: 42), at: 0), "42")
     }
 
-    func testNilPlaceholdersAreIdentifiedByPosition() {
-        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewFlowLayout())
-        let adapter = RecyclerViewAdapter<TestItem?, Text>(collectionView: collectionView) { _ in
-            Text("Loading")
+    func testItemsWithANilIdentityAreIdentifiedByPosition() {
+        struct Draft: Identifiable {
+            let id: Int?
         }
-        XCTAssertEqual(adapter.getItemIDString(for: nil, at: 3), "placeholder_3")
-        XCTAssertNotEqual(adapter.getItemIDString(for: TestItem(id: 7), at: 3), "placeholder_3")
+        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewFlowLayout())
+        let adapter = RecyclerViewAdapter<Draft, Text>(collectionView: collectionView) { _ in
+            Text("Draft")
+        }
+        XCTAssertEqual(adapter.getItemIDString(for: Draft(id: nil), at: 3), "placeholder_3")
+        XCTAssertNotEqual(adapter.getItemIDString(for: Draft(id: 7), at: 3), "placeholder_3")
+    }
+
+    func testValuesAndPlaceholdersHaveDistinctIdentities() {
+        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewFlowLayout())
+        let adapter = RecyclerViewAdapter<RecyclerViewItem<TestItem>, Text>(collectionView: collectionView) { _ in
+            Text("Row")
+        }
+        let value = adapter.getItemIDString(for: .value(TestItem(id: 3)), at: 0)
+        let placeholder = adapter.getItemIDString(for: .placeholder(3), at: 0)
+        XCTAssertNotEqual(value, placeholder)
+        XCTAssertNotEqual(placeholder, adapter.getItemIDString(for: .placeholder(4), at: 0))
     }
 
     // MARK: - Measuring

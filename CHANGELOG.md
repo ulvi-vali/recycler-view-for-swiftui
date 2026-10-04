@@ -24,6 +24,10 @@ All notable changes to this project are documented in this file. The format foll
   `.separator(_:)` and `RecyclerViewSeparator`. None are drawn by default. They sit between rows,
   after the last row only with `drawAfterLast`, and are placed from the rows' final frames without
   taking space, so row measurement and wrap-content heights are unaffected.
+- `RecyclerViewItem<Value>`, an item that is either a `.value` or a `.placeholder` in a numbered slot,
+  for skeleton rows while content loads, with `placeholders(count:)` and `items(from:)`.
+- `RecyclerView` initializers taking `[Value?]`, which wrap the elements in `RecyclerViewItem` and
+  hand the row builder the optional back.
 
 ### Changed
 
@@ -57,6 +61,13 @@ All notable changes to this project are documented in this file. The format foll
   `notifyDataSetChanged()` drops all of them.
 - `setBottomInset` on a list flipped by `reverseLayout` or `stackFromEnd` inset the top of the screen,
   because the flipped collection view's bottom edge is on top. Insets now follow the screen edges.
+
+### Removed
+
+- The public `Optional: Identifiable` conformance (`extension Optional: @retroactive Identifiable`).
+  A conformance of a standard library type to a standard library protocol clashes with any other
+  module that declares the same one. Use `RecyclerViewItem`, or pass `[Value?]` to the new
+  initializers, which keep row builders that take an optional compiling.
 
 ## [1.0.0] - 2026-09-10
 

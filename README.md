@@ -350,6 +350,40 @@ Edges refer to the list as it appears on screen, so a chat list flipped by `stac
 `reverseLayout` still takes its bottom inset at the bottom of the screen. `contentInsets` reads the
 current insets back.
 
+### Placeholder rows
+
+To show skeleton rows while content loads, use `RecyclerViewItem`, which is either a `.value` or a
+`.placeholder` in a numbered slot. Placeholders have identities of their own, so they are diffed
+like any other row, and replacing them with loaded values animates as removals and insertions.
+
+```swift
+let rows: [RecyclerViewItem<Article>] = model.isLoading
+    ? RecyclerViewItem.placeholders(count: 6)
+    : model.articles.map(RecyclerViewItem.value)
+
+RecyclerView(data: rows) { row in
+    switch row {
+    case .value(let article): ArticleRow(article: article)
+    case .placeholder: ArticleRow.skeleton
+    }
+}
+```
+
+An array of optionals works too. `nil` elements become placeholders identified by their position,
+and the row builder receives the optional back:
+
+```swift
+RecyclerView(data: articlesOrNil) { (article: Article?) in
+    if let article = article {
+        ArticleRow(article: article)
+    } else {
+        ArticleRow.skeleton
+    }
+}
+```
+
+With optionals, `onItemClick` and `spanSizeLookup` receive the `RecyclerViewItem`; read `item.value`.
+
 ### Rows that depend on their position
 
 ```swift
@@ -403,6 +437,7 @@ Full documentation is written as DocC comments and can be browsed in Xcode with
 | --- | --- |
 | `init(data:layout:content:)` | Builds a row from each item. `layout` defaults to `.linear()`. |
 | `init(data:layout:content:)` with `(Int, Item)` | Builds a row from each item and its index. |
+| `init(data:layout:content:)` with `[Value?]` | Shows a placeholder row for each `nil`; `Item` is `RecyclerViewItem<Value>`. |
 | `.spanSizeLookup(_:)` | Columns each item spans in a vertical grid. |
 | `.verticalLayout(_:)` | `.wrapContent` (default) sizes to the rows; `.matchParent` fills the container. |
 | `.reverseLayout(_:)` | Flips the list so the first item is at the bottom. |
