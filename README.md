@@ -3,7 +3,7 @@
 [![CI](https://github.com/ulvi-vali/recycler-view-for-swiftui/actions/workflows/ci.yml/badge.svg)](https://github.com/ulvi-vali/recycler-view-for-swiftui/actions/workflows/ci.yml)
 [![Swift Package Manager](https://img.shields.io/badge/SPM-compatible-brightgreen.svg)](https://www.swift.org/documentation/package-manager/)
 [![Platform](https://img.shields.io/badge/platform-iOS%2013%2B-blue.svg)](#requirements)
-[![Swift](https://img.shields.io/badge/Swift-5.9%2B-orange.svg)](https://www.swift.org)
+[![Swift](https://img.shields.io/badge/Swift-6.0%2B-orange.svg)](https://www.swift.org)
 [![License: MIT](https://img.shields.io/badge/license-MIT-lightgrey.svg)](LICENSE)
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/ulvivali)
 
@@ -403,7 +403,8 @@ Give each item a stable `id` that changes only when the item is a different item
 ## Requirements
 
 - iOS 13.0 or later
-- Xcode 15 or later (Swift 5.9)
+- Xcode 16 or later (Swift 6.0). The package compiles in the Swift 6 language mode with strict
+  concurrency checking, and can be used from apps in either the Swift 5 or the Swift 6 mode.
 
 ## Contributing
 

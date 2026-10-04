@@ -1,6 +1,7 @@
 import UIKit
 
 /// Measurements of the window the app is showing.
+@MainActor
 enum WindowMetrics {
     /// The key window of the app's connected scenes, or the first window when none is key.
     static var keyWindow: UIWindow? {

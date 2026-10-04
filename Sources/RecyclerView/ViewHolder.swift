@@ -5,6 +5,7 @@ import UIKit
 ///
 /// On iOS 16 and later the view is hosted with `UIHostingConfiguration`. On earlier versions a
 /// `UIHostingController` is embedded in the cell and reused each time the cell is bound.
+@MainActor
 public class ViewHolder<Content: View>: UICollectionViewCell {
     /// The identifier ``RecyclerViewAdapter`` registers and dequeues this cell with.
     public static var reuseIdentifier: String {
@@ -117,10 +118,13 @@ public class ViewHolder<Content: View>: UICollectionViewCell {
     }
 
     deinit {
-        if let hostingController = hostingController {
-            hostingController.willMove(toParent: nil)
-            hostingController.view.removeFromSuperview()
-            hostingController.removeFromParent()
+        // UIKit releases its views on the main thread, so the cell is torn down there too.
+        MainActor.assumeIsolated {
+            if let hostingController = hostingController {
+                hostingController.willMove(toParent: nil)
+                hostingController.view.removeFromSuperview()
+                hostingController.removeFromParent()
+            }
         }
     }
 }

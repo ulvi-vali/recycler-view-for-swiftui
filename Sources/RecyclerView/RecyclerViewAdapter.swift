@@ -6,6 +6,7 @@ import UIKit
 /// ``RecyclerView`` creates and manages an adapter. Create one yourself only to show SwiftUI rows in
 /// a collection view built in UIKit: the adapter registers ``ViewHolder`` and makes itself the
 /// collection view's data source and delegate.
+@MainActor
 public class RecyclerViewAdapter<Item: Identifiable, Content: View>: NSObject, UICollectionViewDataSource, UICollectionViewDelegate {
     /// Whether cells are rotated to counter a collection view flipped for a reversed layout.
     public var reverseLayout = false

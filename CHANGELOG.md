@@ -6,6 +6,14 @@ All notable changes to this project are documented in this file. The format foll
 
 ## [Unreleased]
 
+### Changed
+
+- The package builds in the Swift 6 language mode with strict concurrency checking, and needs
+  Xcode 16 (swift-tools-version 6.0). Apps in the Swift 5 language mode can still use it.
+- `RecyclerViewAdapter`, `RecyclerViewController` and `ViewHolder` are `@MainActor`.
+- Background diffing sends only integer stand-ins for item identities to the background queue, so
+  `Item` and `Item.ID` need not be `Sendable`.
+
 ## [1.0.0] - 2026-09-10
 
 The first tagged release.

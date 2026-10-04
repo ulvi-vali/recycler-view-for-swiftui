@@ -28,6 +28,7 @@ import UIKit
 ///
 /// Until the list has been created, every method does nothing and the queries return `nil` or
 /// `false`. A controller drives one list at a time; attaching it to another list moves it there.
+@MainActor
 public final class RecyclerViewController {
     weak var collectionView: UICollectionView?
     var axis: Axis = .vertical

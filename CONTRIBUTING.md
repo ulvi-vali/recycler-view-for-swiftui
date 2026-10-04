@@ -10,7 +10,9 @@ minimal reproduction, the library version, and the iOS and Xcode versions you us
 
 ## Development setup
 
-- Xcode 15 or later.
+- Xcode 16 or later. The package builds in the Swift 6 language mode, so new code has to pass
+  strict concurrency checking: UIKit-facing types are `@MainActor`, and only `Sendable` values may
+  cross to another queue.
 - Open `Package.swift` in Xcode to work on the library.
 - Open `Examples/RecyclerViewExample/RecyclerViewExample.xcodeproj` to try a change in the example
   app, which builds against your local copy of the package.

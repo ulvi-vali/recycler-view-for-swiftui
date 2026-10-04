@@ -51,12 +51,14 @@ struct RecyclerViewRepresentable<Item: Identifiable, Content: View>: UIViewRepre
 
         guard let adapter = coordinator.adapter else { return }
         configure(adapter)
+        coordinator.animatesUpdates = withAnimation
 
         let layoutChanged = coordinator.lastLayout != layout
         coordinator.lastLayout = layout
 
         // Every update supersedes a diff still in flight for an earlier one.
         coordinator.updateVersion += 1
+        coordinator.pendingData = nil
         let version = coordinator.updateVersion
 
         // lastData is what the collection view holds, and so the baseline a diff is measured from.
@@ -92,48 +94,66 @@ struct RecyclerViewRepresentable<Item: Identifiable, Content: View>: UIViewRepre
         collectionView: UIRecyclerView,
         coordinator: RecyclerViewCoordinator<Item, Content>
     ) {
-        let withAnimation = self.withAnimation
+        // Only Sendable values cross to the background queue: integer stand-ins for the identities.
+        // The items stay on the main actor with the coordinator until the diff comes back.
+        let tokens = ListDiff.tokens(from: oldIDs, to: newIDs)
+        coordinator.pendingData = newData
 
         DispatchQueue.global(qos: .userInteractive).async {
-            let diff = ListDiff(from: oldIDs, to: newIDs)
+            let diff = ListDiff(from: tokens.old, to: tokens.new)
 
             DispatchQueue.main.async {
-                // A newer update has taken over. The baseline stays where it is, so that update's
-                // diff is measured from what the collection view really holds.
-                guard coordinator.updateVersion == version, let adapter = coordinator.adapter else { return }
-
-                // The collection view takes the new items from here, so this is where the baseline moves.
-                coordinator.lastData = newData
-
-                guard !diff.isEmpty else {
-                    adapter.items = newData
-                    adapter.notifyDataSetChanged()
-                    collectionView.collectionViewLayout.invalidateLayout()
-                    return
-                }
-
-                let performUpdates = {
-                    collectionView.performBatchUpdates({
-                        adapter.items = newData
-                        if !diff.deletions.isEmpty {
-                            collectionView.deleteItems(at: diff.deletions)
-                        }
-                        if !diff.insertions.isEmpty {
-                            collectionView.insertItems(at: diff.insertions)
-                        }
-                    }, completion: { _ in
-                        // Rows that stayed in place keep their cells, which may show stale values.
-                        Self.rebindVisibleCells(of: collectionView, adapter: adapter)
-                        collectionView.collectionViewLayout.invalidateLayout()
-                    })
-                }
-
-                if withAnimation {
-                    performUpdates()
-                } else {
-                    UIView.performWithoutAnimation(performUpdates)
+                MainActor.assumeIsolated {
+                    Self.apply(diff, version: version, collectionView: collectionView, coordinator: coordinator)
                 }
             }
+        }
+    }
+
+    private static func apply(
+        _ diff: ListDiff,
+        version: Int,
+        collectionView: UIRecyclerView,
+        coordinator: RecyclerViewCoordinator<Item, Content>
+    ) {
+        // A newer update has taken over. The baseline stays where it is, so that update's diff is
+        // measured from what the collection view really holds.
+        guard coordinator.updateVersion == version,
+              let adapter = coordinator.adapter,
+              let newData = coordinator.pendingData
+        else { return }
+
+        // The collection view takes the new items from here, so this is where the baseline moves.
+        coordinator.pendingData = nil
+        coordinator.lastData = newData
+
+        guard !diff.isEmpty else {
+            adapter.items = newData
+            adapter.notifyDataSetChanged()
+            collectionView.collectionViewLayout.invalidateLayout()
+            return
+        }
+
+        let performUpdates = {
+            collectionView.performBatchUpdates({
+                adapter.items = newData
+                if !diff.deletions.isEmpty {
+                    collectionView.deleteItems(at: diff.deletions)
+                }
+                if !diff.insertions.isEmpty {
+                    collectionView.insertItems(at: diff.insertions)
+                }
+            }, completion: { _ in
+                // Rows that stayed in place keep their cells, which may show stale values.
+                rebindVisibleCells(of: collectionView, adapter: adapter)
+                collectionView.collectionViewLayout.invalidateLayout()
+            })
+        }
+
+        if coordinator.animatesUpdates {
+            performUpdates()
+        } else {
+            UIView.performWithoutAnimation(performUpdates)
         }
     }
 
@@ -186,10 +206,15 @@ struct RecyclerViewRepresentable<Item: Identifiable, Content: View>: UIViewRepre
     }
 }
 
+@MainActor
 final class RecyclerViewCoordinator<Item: Identifiable, Content: View> {
     var adapter: RecyclerViewAdapter<Item, Content>?
     /// The items the collection view holds: the baseline the next diff is measured from.
     var lastData: [Item] = []
+    /// The items of the latest update, waiting for their diff to come back from the background queue.
+    var pendingData: [Item]?
+    /// Whether batch updates are animated.
+    var animatesUpdates = true
     var lastLayout: RecyclerViewLayoutManager?
     /// Incremented on every update, so a diff that finishes after a newer update can tell it is stale.
     var updateVersion = 0

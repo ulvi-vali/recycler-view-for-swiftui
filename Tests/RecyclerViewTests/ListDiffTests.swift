@@ -32,4 +32,19 @@ final class ListDiffTests: XCTestCase {
         }
         XCTAssertEqual(result, new)
     }
+
+    // MARK: - Tokens
+
+    func testTokensStandInForEachDistinctIdentity() {
+        let tokens = ListDiff.tokens(from: ["a", "b", "c"], to: ["c", "d", "a"])
+        XCTAssertEqual(tokens.old, [0, 1, 2])
+        XCTAssertEqual(tokens.new, [2, 3, 0])
+    }
+
+    func testDiffingTokensMatchesDiffingIdentities() {
+        let old = ["x", "y", "z", "w"]
+        let new = ["y", "q", "w", "x"]
+        let tokens = ListDiff.tokens(from: old, to: new)
+        XCTAssertEqual(ListDiff(from: tokens.old, to: tokens.new), ListDiff(from: old, to: new))
+    }
 }
