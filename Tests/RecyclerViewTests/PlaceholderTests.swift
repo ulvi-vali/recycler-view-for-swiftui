@@ -94,6 +94,35 @@ final class PlaceholderTests: XCTestCase {
         XCTAssertEqual(received[1], .some(nil))
     }
 
+    /// The form 1.x code was written in, with an unannotated closure, still compiles.
+    func testCodeWrittenForOptionalsStillCompiles() {
+        let articlesOrNil: [TestItem?] = [TestItem(id: 1, title: "One"), nil]
+        var opened: [Int] = []
+        let list = RecyclerView(data: articlesOrNil) { article in
+            if let article = article {
+                Text(article.title)
+            } else {
+                Text("Loading")
+            }
+        }
+        .onItemClick { _, item in
+            if let article = item.value {
+                opened.append(article.id)
+            }
+        }
+        .spanSizeLookup { item in item.isPlaceholder ? 2 : 1 }
+
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 480))
+        let hostingController = UIHostingController(rootView: list.verticalLayout(.matchParent))
+        window.rootViewController = hostingController
+        window.isHidden = false
+        hostingController.view.layoutIfNeeded()
+        let collectionView = hostingController.view.firstDescendant(ofType: UIRecyclerView.self)
+        collectionView?.delegate?.collectionView?(collectionView!, didSelectItemAt: IndexPath(item: 0, section: 0))
+        collectionView?.delegate?.collectionView?(collectionView!, didSelectItemAt: IndexPath(item: 1, section: 0))
+        XCTAssertEqual(opened, [1])
+    }
+
     func testNonOptionalDataStillUsesTheItemsThemselves() {
         // An array of values picks the plain initializer, so Item is the value type itself.
         let list = RecyclerView(data: [TestItem(id: 1)]) { item in

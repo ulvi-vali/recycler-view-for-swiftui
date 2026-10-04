@@ -42,6 +42,7 @@ RecyclerView(data: articles, layout: .linear(spacing: 12)) { article in
 - [How it works](#how-it-works)
 - [Example app](#example-app)
 - [Troubleshooting](#troubleshooting)
+- [Migrating from 1.x](#migrating-from-1x)
 - [Requirements](#requirements)
 - [Contributing](#contributing)
 - [Support](#support)
@@ -85,8 +86,12 @@ It also keeps Android's vocabulary (linear and grid layout managers, `spanSizeLo
 - **Programmatic scrolling** with `RecyclerViewController`: scroll to an item with an offset, find the
   row under a line on screen, tell user scrolling from programmatic scrolling, and set content
   insets on any edge for floating bars.
-- **Wrap-content or match-parent sizing**, keyboard dismissal on drag, full-bleed headers under the
-  status bar.
+- **Wrap-content or match-parent sizing.** Wrap-content lists measure against the width and height
+  their container proposes, so they fit cards, sheets and custom navigation hosts alike.
+- **Placeholder rows** with `RecyclerViewItem`, or by passing an array of optionals.
+- **Swift 6 ready.** Built in the Swift 6 language mode with strict concurrency checking.
+- Keyboard dismissal on drag, scoped to the list or the whole window, and full-bleed headers under
+  the status bar.
 - **UIKit support.** Use `RecyclerViewAdapter` to show SwiftUI rows in your own `UICollectionView`.
 
 ## Installation
@@ -97,14 +102,14 @@ RecyclerView is distributed with [Swift Package Manager](https://www.swift.org/d
 
 1. Choose **File › Add Package Dependencies…**
 2. Enter `https://github.com/ulvi-vali/recycler-view-for-swiftui.git`
-3. Select **Up to Next Major Version** from `1.0.0` and add the **RecyclerView** library to your app
+3. Select **Up to Next Major Version** from `2.0.0` and add the **RecyclerView** library to your app
    target.
 
 ### Package.swift
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/ulvi-vali/recycler-view-for-swiftui.git", from: "1.0.0")
+    .package(url: "https://github.com/ulvi-vali/recycler-view-for-swiftui.git", from: "2.0.0")
 ],
 targets: [
     .target(
@@ -473,6 +478,35 @@ Full documentation is written as DocC comments and can be browsed in Xcode with
 | `.linear(orientation:spacing:)` | A single column or row. |
 | `.grid(spanCount:spacing:orientation:)` | `spanCount` columns (vertical) or rows (horizontal). |
 
+### RecyclerViewItem
+
+| API | Description |
+| --- | --- |
+| `.value(_:)` / `.placeholder(_:)` | A loaded value, or a placeholder in a numbered slot. |
+| `id` | The value's own `id`, or the placeholder's slot; the two never collide. |
+| `value`, `isPlaceholder` | The value, or `nil` for a placeholder. |
+| `placeholders(count:)` | Placeholders in slots `0..<count`. |
+| `items(from:)` | Wraps `[Value?]`, turning each `nil` into a placeholder at its position. |
+
+### RecyclerViewSeparator and RecyclerViewKeyboardDismissal
+
+| API | Description |
+| --- | --- |
+| `RecyclerViewSeparator(color:thickness:insets:drawsAfterLast:)` | A separator; `thickness: nil` is a hairline. |
+| `RecyclerViewKeyboardDismissal.list` | Ends editing in text input inside the list. |
+| `RecyclerViewKeyboardDismissal.window` | Ends editing anywhere in the list's window. |
+
+### RecyclerViewAdapter
+
+| API | Description |
+| --- | --- |
+| `init(collectionView:content:)` | Becomes the data source and delegate of a `UICollectionView`. |
+| `items` | The items shown. Assigning drops the measurements of items that changed. |
+| `notifyItemInserted(at:)`, `notifyItemRemoved(at:)`, `notifyItemMoved(from:to:)` | Granular updates. |
+| `notifyItemChanged(at:)`, `notifyDataSetChanged()` | Rebind or reload, measuring the rows again. |
+| `invalidateMeasurement(at:)`, `invalidateAllMeasurements()` | Drop cached row heights by hand. |
+| `keyboardDismissal`, `separator` | The same options as the `RecyclerView` modifiers. |
+
 ## How it works
 
 - `RecyclerView` is a `UIViewRepresentable` around `UIRecyclerView`, a `UICollectionView` with a
@@ -487,13 +521,18 @@ Full documentation is written as DocC comments and can be browsed in Xcode with
   and pass the result to the layout as the estimated height. When an item keeps its `id` but its
   value changes, its measurements are dropped and the row is measured again: exactly the changed
   items when `Item` is `Equatable`, the rows on screen otherwise.
+- Wrap-content lists answer `UIViewRepresentable.sizeThatFits` on iOS 16 and later with their rows
+  measured at the proposed width, capped at the proposed height. On iOS 13–15 the collection view
+  measures itself at its laid-out width and reports the height to a flexible frame.
+- Separators are supplementary views placed by a compositional layout subclass from the rows' final
+  frames, so they take no part in sizing.
 - Reversed layouts rotate the collection view by 180° and rotate each cell back.
 
 ## Example app
 
 [`Examples/RecyclerViewExample`](Examples/RecyclerViewExample) contains a demo for each feature:
 a vertical list with inserts and removals, a grid with spans, horizontal lists, pagination, a chat,
-and section tabs driven by `RecyclerViewController`. Open `RecyclerViewExample.xcodeproj` and run it on
+and section tabs driven by `RecyclerViewController` over a list with separators. Open `RecyclerViewExample.xcodeproj` and run it on
 an iOS 16 or later simulator; it builds against the local copy of the package.
 
 ## Troubleshooting
@@ -519,6 +558,61 @@ again, including rows that are off screen. Without `Equatable` only the rows on 
 again, and other rows correct their height as they scroll into view. In UIKit, call
 `notifyItemChanged(at:)`, or `invalidateMeasurement(at:)` when a row depends on state outside its
 item.
+
+## Migrating from 1.x
+
+Version 2.0.0 contains a few breaking changes. Most apps need at most the first two steps.
+
+1. **Build with Xcode 16 or later.** The package uses swift-tools-version 6.0 and the Swift 6
+   language mode. Your app can stay in the Swift 5 language mode.
+
+2. **Arrays of optionals.** The public `Optional: Identifiable` conformance is gone, because a
+   conformance of a standard library type to a standard library protocol clashes with any other
+   module that declares it. Passing `[Article?]` still compiles, through new initializers that wrap
+   the elements in `RecyclerViewItem<Article>` and hand your row builder the optional back:
+
+   ```swift
+   // 1.x and 2.0: unchanged
+   RecyclerView(data: articlesOrNil) { article in
+       if let article = article { ArticleRow(article: article) } else { ArticleRow.skeleton }
+   }
+   ```
+
+   What changes is the item type seen by the callbacks: `onItemClick` and `spanSizeLookup` receive a
+   `RecyclerViewItem<Article>` instead of an `Article?`. Read `item.value`:
+
+   ```swift
+   // 1.x
+   .onItemClick { _, article in if let article = article { open(article) } }
+   // 2.0
+   .onItemClick { _, item in if let article = item.value { open(article) } }
+   ```
+
+   If you named the type, `RecyclerView<Article?, Row>` becomes
+   `RecyclerView<RecyclerViewItem<Article>, Row>`, and `RecyclerViewAdapter<Article?, Row>` becomes
+   `RecyclerViewAdapter<RecyclerViewItem<Article>, Row>` with items built by
+   `RecyclerViewItem.items(from:)`. If your code relied on `Optional` being `Identifiable` elsewhere,
+   declare that conformance in your own module.
+
+3. **Keyboard dismissal.** `.dismissesKeyboardOnScroll()` now ends editing only in text input inside
+   the list. If the text field sits outside the list, as a search field or chat composer does, write
+   `.dismissesKeyboardOnScroll(.window)` to keep the 1.x behaviour.
+
+4. **Wrap-content heights.** Wrap-content lists are no longer capped at the screen height less fixed
+   allowances for bars and headers; they take the height their container proposes. A list that
+   relied on the old cap inside an unbounded container, such as a `ScrollView`, now grows to show all
+   of its rows. Give it a frame, or use `.verticalLayout(.matchParent)` with a fixed height, to bound
+   it. Horizontal wrap-content lists lose the extra 15pt below their tallest item.
+
+5. **Main actor.** `RecyclerViewAdapter`, `RecyclerViewController` and `ViewHolder` are `@MainActor`.
+   Code in the Swift 6 language mode that used them off the main actor has to move to it.
+
+6. **Bottom insets in reversed lists.** In a list flipped by `stackFromEnd` or `reverseLayout`,
+   `setBottomInset` now insets the bottom of the screen. If you passed a top inset to work around
+   the old behaviour, pass the bottom inset instead.
+
+Nothing else is removed. `setBottomInset(_:animated:duration:)` and `.dismissesKeyboardOnScroll(_:)`
+with a `Bool` keep working, and the minimum deployment target stays iOS 13.
 
 ## Requirements
 

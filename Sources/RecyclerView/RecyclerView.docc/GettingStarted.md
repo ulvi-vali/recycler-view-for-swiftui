@@ -123,3 +123,53 @@ struct MenuScreen: View {
     }
 }
 ```
+
+The controller also sets content insets, so that bars floating over the list do not hide its first
+and last rows. ``RecyclerViewController/setContentInsets(_:animated:duration:)`` insets every edge
+and the scroll indicators with it; edges follow the screen, even in a reversed list:
+
+```swift
+controller.setContentInsets(UIEdgeInsets(top: 56, left: 0, bottom: 72, right: 0), animated: true)
+```
+
+### Separate rows
+
+Linear lists have no separators by default.
+``RecyclerView/RecyclerView/separator(color:thickness:insets:drawAfterLast:)`` draws a line between
+rows, and after the last row only when asked. Separators take no space, so rows are measured the same
+with or without them:
+
+```swift
+RecyclerView(data: contacts) { contact in
+    ContactRow(contact: contact)
+}
+.separator(insets: EdgeInsets(top: 0, leading: 72, bottom: 0, trailing: 0))
+```
+
+### Show placeholders while content loads
+
+Wrap items in ``RecyclerViewItem`` to mix loaded values with placeholder rows. Each placeholder has
+an identity of its own, so replacing placeholders with values animates like any other update:
+
+```swift
+let rows: [RecyclerViewItem<Article>] = model.isLoading
+    ? RecyclerViewItem.placeholders(count: 6)
+    : model.articles.map(RecyclerViewItem.value)
+
+RecyclerView(data: rows) { row in
+    switch row {
+    case .value(let article): ArticleRow(article: article)
+    case .placeholder: ArticleRow.skeleton
+    }
+}
+```
+
+An array of optionals works as well: each `nil` becomes a placeholder, and the row builder receives
+the optional.
+
+### Reorder rows
+
+Items are matched by `id`, so sorting or reordering `data` moves the rows: they keep their cells and
+animate to their new positions, in the same batch update as any insertions and removals. When the
+item type is `Equatable`, an item that keeps its `id` but changes is measured again, so its row takes
+its new height.

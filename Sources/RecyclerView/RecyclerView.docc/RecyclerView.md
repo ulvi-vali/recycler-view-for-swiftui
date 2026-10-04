@@ -6,9 +6,11 @@ A `UICollectionView`-backed list for SwiftUI, modelled on Android's RecyclerView
 
 RecyclerView brings the strengths of `UICollectionView` to SwiftUI: cells are reused, each row sizes
 itself to its SwiftUI content, and updates are applied as animated batch updates matched by item
-identity. On top of that it offers the parts of Android's `RecyclerView` that SwiftUI lists lack:
-grids whose items span several columns, lists anchored to the bottom for chat, a pagination callback,
-and a controller for scrolling to a row and finding the row under a point on screen.
+identity, moves included. On top of that it offers the parts of Android's `RecyclerView` that
+SwiftUI lists lack: grids whose items span several columns, lists anchored to the bottom for chat, a
+pagination callback, separators, placeholder rows, and a controller for scrolling to a row, setting
+content insets and finding the row under a point on screen. Wrap-content lists size themselves by
+the space their container proposes, so they fit any container.
 
 ```swift
 import RecyclerView
@@ -37,6 +39,7 @@ struct ArticlesScreen: View {
 ### Essentials
 
 - <doc:GettingStarted>
+- <doc:MigratingFrom1x>
 - ``RecyclerView/RecyclerView``
 - ``RecyclerViewLayoutManager``
 - ``RecyclerViewVerticalLayout``
@@ -45,6 +48,7 @@ struct ArticlesScreen: View {
 
 - ``RecyclerViewSeparator``
 - ``RecyclerViewKeyboardDismissal``
+- ``RecyclerViewItem``
 
 ### Scrolling programmatically
 

@@ -6,6 +6,13 @@ All notable changes to this project are documented in this file. The format foll
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-10-04
+
+A major release: wrap-content lists measure against their container, rows can be moved, separated
+and given placeholders, and the package builds in the Swift 6 language mode. It contains breaking
+changes; see [Migrating from 1.x](README.md#migrating-from-1x). The minimum deployment target stays
+iOS 13.
+
 ### Added
 
 - `RecyclerViewController.setContentInsets(_:animated:duration:)` sets the content inset on every
@@ -31,13 +38,14 @@ All notable changes to this project are documented in this file. The format foll
 
 ### Changed
 
-- `.dismissesKeyboardOnScroll()` and `.dismissesKeyboardOnScroll(true)` only end editing in text
-  input inside the list, instead of ending editing in the whole window. Pass `.window` for the old
-  behaviour, for example when a search field or chat composer sits outside the list.
-
 - The package builds in the Swift 6 language mode with strict concurrency checking, and needs
   Xcode 16 (swift-tools-version 6.0). Apps in the Swift 5 language mode can still use it.
 - `RecyclerViewAdapter`, `RecyclerViewController` and `ViewHolder` are `@MainActor`.
+- `.dismissesKeyboardOnScroll()` and `.dismissesKeyboardOnScroll(true)` only end editing in text
+  input inside the list, instead of ending editing in the whole window. Pass `.window` for the old
+  behaviour, for example when a search field or chat composer sits outside the list.
+- `RecyclerViewAdapter.dismissesKeyboardOnScroll` is now a view of `keyboardDismissal`; setting it
+  to `true` selects `.list`.
 - Background diffing sends only integer stand-ins for item identities to the background queue, so
   `Item` and `Item.ID` need not be `Sendable`.
 - Wrap-content lists measure against the space SwiftUI proposes. Rows are measured at the container's
@@ -117,5 +125,6 @@ The first tagged release.
 - The public `RecyclerViewCoordinator` type and `UIHostingController.init(rootView:ignoreSafeArea:)`
   extension, which were implementation details.
 
-[Unreleased]: https://github.com/ulvi-vali/recycler-view-for-swiftui/compare/1.0.0...HEAD
+[Unreleased]: https://github.com/ulvi-vali/recycler-view-for-swiftui/compare/2.0.0...HEAD
+[2.0.0]: https://github.com/ulvi-vali/recycler-view-for-swiftui/compare/1.0.0...2.0.0
 [1.0.0]: https://github.com/ulvi-vali/recycler-view-for-swiftui/releases/tag/1.0.0
