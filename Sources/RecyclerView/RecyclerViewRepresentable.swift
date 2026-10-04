@@ -17,9 +17,38 @@ struct RecyclerViewRepresentable<Item: Identifiable, Content: View>: UIViewRepre
     let dismissesKeyboardOnScroll: Bool
     let precomputesItemHeights: Bool
     let controller: RecyclerViewController?
+    /// Receives the measured height of a wrap-content list where SwiftUI cannot ask the list for its
+    /// size directly, before iOS 16. `nil` when the list answers `sizeThatFits` itself.
+    var onWrapContentHeight: ((CGFloat) -> Void)?
 
     func makeCoordinator() -> RecyclerViewCoordinator<Item, Content> {
         RecyclerViewCoordinator()
+    }
+
+    /// Sizes a wrap-content list to its items, measured at the width SwiftUI proposes and capped at the
+    /// proposed height.
+    ///
+    /// A `nil` height proposal, as inside a vertical `ScrollView`, leaves the list as tall as all of its
+    /// items. A list that is not wrap-content falls back to the default sizing, filling the proposal.
+    @available(iOS 16.0, *)
+    func sizeThatFits(_ proposal: ProposedViewSize, uiView: UIRecyclerView, context: Context) -> CGSize? {
+        guard verticalLayout == .wrapContent, onWrapContentHeight == nil, let adapter = context.coordinator.adapter else {
+            return nil
+        }
+
+        let proposedWidth = proposal.width ?? uiView.bounds.width
+        guard proposedWidth.isFinite, proposedWidth > 0 else { return nil }
+
+        let maxHeight = proposal.height ?? .infinity
+        let height = WrapContentMeasurement.height(
+            of: data,
+            layout: layout,
+            spanSizeLookup: spanSizeLookup,
+            width: proposedWidth,
+            maxHeight: maxHeight,
+            adapter: adapter
+        )
+        return CGSize(width: proposedWidth, height: height)
     }
 
     func makeUIView(context: Context) -> UIRecyclerView {
@@ -40,7 +69,49 @@ struct RecyclerViewRepresentable<Item: Identifiable, Content: View>: UIViewRepre
 
         collectionView.collectionViewLayout = RecyclerViewLayoutFactory.makeLayout(for: layout, adapter: adapter)
         controller?.attach(to: collectionView, axis: layout.orientation)
+
+        collectionView.onWidthChange = { [weak coordinator] _ in
+            coordinator?.reportWrapContentHeight?()
+        }
+        coordinator.reportWrapContentHeight = makeWrapContentReporter(for: collectionView, coordinator: coordinator)
         return collectionView
+    }
+
+    /// Before iOS 16 SwiftUI cannot ask a representable for its size, so the list measures itself at
+    /// its laid-out width, which is the width its container proposes, and reports the height back to
+    /// ``RecyclerView``, which frames the list with it.
+    private func makeWrapContentReporter(
+        for collectionView: UIRecyclerView,
+        coordinator: RecyclerViewCoordinator<Item, Content>
+    ) -> (() -> Void)? {
+        guard verticalLayout == .wrapContent, let onWrapContentHeight = onWrapContentHeight else { return nil }
+        let data = data
+        let layout = layout
+        let spanSizeLookup = spanSizeLookup
+
+        return { [weak collectionView, weak coordinator] in
+            guard let collectionView = collectionView,
+                  let coordinator = coordinator,
+                  let adapter = coordinator.adapter,
+                  collectionView.bounds.width > 0
+            else { return }
+
+            let height = WrapContentMeasurement.height(
+                of: data,
+                layout: layout,
+                spanSizeLookup: spanSizeLookup,
+                width: collectionView.bounds.width,
+                adapter: adapter
+            )
+            guard height != coordinator.reportedWrapContentHeight else { return }
+            coordinator.reportedWrapContentHeight = height
+
+            // Reported on a later turn: this runs during layout or a view update, when SwiftUI state
+            // must not change.
+            Task { @MainActor in
+                onWrapContentHeight(height)
+            }
+        }
     }
 
     func updateUIView(_ collectionView: UIRecyclerView, context: Context) {
@@ -52,6 +123,10 @@ struct RecyclerViewRepresentable<Item: Identifiable, Content: View>: UIViewRepre
         guard let adapter = coordinator.adapter else { return }
         configure(adapter)
         coordinator.animatesUpdates = withAnimation
+        defer {
+            coordinator.reportWrapContentHeight = makeWrapContentReporter(for: collectionView, coordinator: coordinator)
+            coordinator.reportWrapContentHeight?()
+        }
 
         let layoutChanged = coordinator.lastLayout != layout
         coordinator.lastLayout = layout
@@ -215,6 +290,10 @@ final class RecyclerViewCoordinator<Item: Identifiable, Content: View> {
     var pendingData: [Item]?
     /// Whether batch updates are animated.
     var animatesUpdates = true
+    /// Measures a wrap-content list and reports its height, before iOS 16.
+    var reportWrapContentHeight: (() -> Void)?
+    /// The height last reported by ``reportWrapContentHeight``.
+    var reportedWrapContentHeight: CGFloat?
     var lastLayout: RecyclerViewLayoutManager?
     /// Incremented on every update, so a diff that finishes after a newer update can tell it is stale.
     var updateVersion = 0

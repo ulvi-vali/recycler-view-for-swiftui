@@ -30,4 +30,30 @@ enum SwiftUIMeasurement {
             verticalFittingPriority: .fittingSizeLevel
         ).height
     }
+
+    /// The size `view` takes when both its width and height are left to its content: its ideal size.
+    ///
+    /// Items in a horizontal list size themselves this way along the scroll axis, so their ideal
+    /// height is the height the list needs to show them unclipped.
+    static func idealSize<Content: View>(of view: Content) -> CGSize {
+        let target = UIView.layoutFittingCompressedSize
+
+        if #available(iOS 16.0, *) {
+            let contentView = UIHostingConfiguration { view }
+                .margins(.all, 0)
+                .makeContentView()
+            return contentView.systemLayoutSizeFitting(
+                target,
+                withHorizontalFittingPriority: .fittingSizeLevel,
+                verticalFittingPriority: .fittingSizeLevel
+            )
+        }
+
+        let hostingController = UIHostingController(rootView: view, ignoreSafeArea: true)
+        return hostingController.view.systemLayoutSizeFitting(
+            target,
+            withHorizontalFittingPriority: .fittingSizeLevel,
+            verticalFittingPriority: .fittingSizeLevel
+        )
+    }
 }

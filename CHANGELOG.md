@@ -13,6 +13,17 @@ All notable changes to this project are documented in this file. The format foll
 - `RecyclerViewAdapter`, `RecyclerViewController` and `ViewHolder` are `@MainActor`.
 - Background diffing sends only integer stand-ins for item identities to the background queue, so
   `Item` and `Item.ID` need not be `Sendable`.
+- Wrap-content lists measure against the space SwiftUI proposes. Rows are measured at the container's
+  width, and the height is capped at the container's proposed height, through `sizeThatFits` on
+  iOS 16 and later and a measurement after layout on iOS 13–15. The fixed allowances for a navigation
+  bar, a header, the safe area and a bottom margin are gone, as is any reading of the screen size.
+- Wrap-content horizontal lists and grids measure items at their ideal size instead of an assumed
+  150pt width, and no longer add 15pt below the tallest item.
+
+### Fixed
+
+- Wrap-content lists narrower than the screen, such as lists inside cards or split views, were
+  measured at the screen's width and came out too short.
 
 ## [1.0.0] - 2026-09-10
 

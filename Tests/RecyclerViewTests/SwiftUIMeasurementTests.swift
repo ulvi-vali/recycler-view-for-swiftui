@@ -23,6 +23,18 @@ final class SwiftUIMeasurementTests: XCTestCase {
         XCTAssertEqual(withSpacer, text, accuracy: 0.5)
     }
 
+    func testIdealSizeOfAFixedFrameIsTheFrame() {
+        let size = SwiftUIMeasurement.idealSize(of: Color.red.frame(width: 140, height: 90))
+        XCTAssertEqual(size.width, 140, accuracy: 0.5)
+        XCTAssertEqual(size.height, 90, accuracy: 0.5)
+    }
+
+    func testIdealSizeOfTextIsASingleLine() {
+        let size = SwiftUIMeasurement.idealSize(of: Text("Title"))
+        XCTAssertGreaterThan(size.width, 10)
+        XCTAssertEqual(size.height, SwiftUIMeasurement.fittingHeight(of: Text("Title"), width: 320), accuracy: 0.5)
+    }
+
     func testMatchesTheHeightOfASelfSizingCell() {
         let row = VStack(alignment: .leading, spacing: 4) {
             Text("Headline").font(.headline)

@@ -163,6 +163,27 @@ struct ContactsScreen: View {
 .grid(spanCount: 3, spacing: 8, orientation: .horizontal) // horizontal grid with three rows
 ```
 
+### Wrap content
+
+A wrap-content list measures its rows at the width its container proposes, the same way it lays them
+out, so a list inside a card or a narrow column is measured at that width rather than the screen's.
+Its height is capped only by the height the container proposes: in a `VStack` next to other views it
+takes what is left and scrolls, and in a vertical `ScrollView` it is as tall as all of its rows. It
+makes no assumptions about the window, navigation bars or headers, so it works inside any container,
+including custom navigation hosts.
+
+```swift
+VStack(spacing: 0) {
+    Header()
+    RecyclerView(data: results) { result in   // as tall as its rows, at most the space left
+        ResultRow(result: result)
+    }
+}
+```
+
+On iOS 16 and later SwiftUI asks the list for its size directly. On iOS 13–15 the list measures
+itself once it has been laid out and settles on its height in a second layout pass.
+
 ### Grid with column spans
 
 `spanSizeLookup` returns how many columns an item takes, like Android's
@@ -391,7 +412,8 @@ RecyclerView's modifiers are declared on `RecyclerView` itself. Apply them befor
 modifiers.
 
 **The list is only as tall as its rows, or is cut off.**
-Lists default to `.wrapContent`. Use `.verticalLayout(.matchParent)` for a list that fills the screen.
+Lists default to `.wrapContent`, which is as tall as the rows and at most as tall as the container
+allows. Use `.verticalLayout(.matchParent)` for a list that fills the screen.
 
 **`onLoadMore` never fires.**
 It only fires while the item count is a multiple of `pageSize`. Make sure every page except the last

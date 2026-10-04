@@ -41,7 +41,13 @@ public enum RecyclerViewVerticalLayout: Equatable, Sendable {
 
     /// Sizes itself to fit its items, like Android's `wrap_content`.
     ///
-    /// The items are measured to compute the height, which is capped below the height of the screen.
-    /// Suited to short lists embedded in other content.
+    /// The items are measured at the width the container proposes, the way the list lays them out,
+    /// and the list is as tall as they are. A container that proposes less height, such as a `VStack`
+    /// sharing the screen with other views, caps the list at that height, and the list scrolls; one
+    /// that proposes no height, such as a vertical `ScrollView`, gets a list as tall as all its items.
+    /// Nothing about the window, the screen or the bars around the list is assumed.
+    ///
+    /// Suited to short lists embedded in other content. A horizontal list is as tall as its tallest
+    /// item at that item's ideal size.
     case wrapContent
 }

@@ -51,6 +51,7 @@ public class RecyclerViewAdapter<Item: Identifiable, Content: View>: NSObject, U
     private var previousItemCount = 0
     private var loadMoreTriggered = false
     private var heightCache: [String: CGFloat] = [:]
+    private var idealSizeCache: [String: CGSize] = [:]
 
     /// Creates an adapter that builds each row from its index and item, and attaches it to
     /// `collectionView`.
@@ -99,6 +100,22 @@ public class RecyclerViewAdapter<Item: Identifiable, Content: View>: NSObject, U
         let height = max(1, ceil(SwiftUIMeasurement.fittingHeight(of: content(index, item), width: width)))
         heightCache[key] = height
         return height
+    }
+
+    /// Measures the ideal size of the row for `item`, caching the result per item identity.
+    ///
+    /// Items in horizontal layouts choose their own width, so a wrap-content horizontal list is as
+    /// tall as the tallest ideal height among its items.
+    func measuredIdealSize(for item: Item, at index: Int) -> CGSize {
+        let key = "\(getItemIDString(for: item, at: index))@ideal"
+        if let cached = idealSizeCache[key] {
+            return cached
+        }
+
+        let size = SwiftUIMeasurement.idealSize(of: content(index, item))
+        let rounded = CGSize(width: max(1, ceil(size.width)), height: max(1, ceil(size.height)))
+        idealSizeCache[key] = rounded
+        return rounded
     }
 
     // MARK: - Notifying changes

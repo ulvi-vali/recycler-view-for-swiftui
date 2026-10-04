@@ -39,6 +39,9 @@ public struct RecyclerView<Item: Identifiable, Content: View>: View {
     private var precomputesItemHeights = true
     private var controller: RecyclerViewController?
 
+    /// The height a wrap-content list measured for itself, before iOS 16.
+    @State private var legacyWrapContentHeight: CGFloat?
+
     /// Creates a list that builds a row for each item.
     ///
     /// - Parameters:
@@ -248,15 +251,20 @@ public struct RecyclerView<Item: Identifiable, Content: View>: View {
 
     @ViewBuilder
     public var body: some View {
-        if verticalLayout == .wrapContent {
-            list.frame(height: wrapContentHeight())
+        if verticalLayout == .wrapContent && !WrapContentSizing.listAnswersSizeThatFits {
+            // Before iOS 16 the list measures itself once laid out and reports its height. The flexible
+            // frame keeps it at that height but lets a smaller container squeeze it, as
+            // `sizeThatFits` does on later versions.
+            let height = legacyWrapContentHeight ?? 0
+            list(onWrapContentHeight: { legacyWrapContentHeight = $0 })
+                .frame(minHeight: 0, idealHeight: height, maxHeight: height)
         } else {
-            list
+            list(onWrapContentHeight: nil)
         }
     }
 
-    private var list: some View {
-        RecyclerViewRepresentable(
+    private func list(onWrapContentHeight: ((CGFloat) -> Void)?) -> some View {
+        var representable = RecyclerViewRepresentable(
             data: displayedData,
             layout: layout,
             content: { index, item in content(dataIndex(forDisplayedIndex: index), item) },
@@ -273,7 +281,8 @@ public struct RecyclerView<Item: Identifiable, Content: View>: View {
             precomputesItemHeights: precomputesItemHeights,
             controller: controller
         )
-        .padding(.top, topOffset)
+        representable.onWrapContentHeight = onWrapContentHeight
+        return representable.padding(.top, topOffset)
     }
 
     /// Stacking from the end flips the list, so the items are reversed to keep reading top to bottom.
@@ -294,99 +303,18 @@ public struct RecyclerView<Item: Identifiable, Content: View>: View {
         return -WindowMetrics.safeAreaInsets.top
     }
 
-    // MARK: - Wrap content
-
-    private func wrapContentHeight() -> CGFloat {
-        guard !data.isEmpty else { return 0 }
-
-        let screen = WindowMetrics.screenBounds
-        let maxHeight = WrapContentMetrics.maxHeight(screenHeight: screen.height, safeAreaInsets: WindowMetrics.safeAreaInsets)
-
-        switch layout {
-        case .linear(let orientation, let spacing):
-            if orientation == .horizontal {
-                var tallest: CGFloat = 0
-                var usedWidth: CGFloat = 0
-                for (index, item) in data.enumerated() {
-                    tallest = max(tallest, measuredHeight(at: index, of: item, width: WrapContentMetrics.horizontalItemWidth))
-                    usedWidth += WrapContentMetrics.horizontalItemWidth + spacing
-                    if usedWidth >= screen.width {
-                        break
-                    }
-                }
-                return min(tallest + 2 * spacing + WrapContentMetrics.horizontalExtraHeight, maxHeight)
-            }
-
-            var totalHeight: CGFloat = 0
-            for (index, item) in data.enumerated() {
-                totalHeight += measuredHeight(at: index, of: item, width: screen.width) + spacing
-                if totalHeight + 2 * spacing >= maxHeight {
-                    return maxHeight
-                }
-            }
-            if totalHeight > spacing {
-                totalHeight -= spacing
-            }
-            return min(totalHeight + 2 * spacing, maxHeight)
-
-        case .grid(let spanCount, let spacing, let orientation):
-            let spanCount = max(1, spanCount)
-
-            if orientation == .vertical {
-                let columnWidth = (screen.width - CGFloat(spanCount - 1) * spacing) / CGFloat(spanCount)
-                let spans = data.map { SpanRows.clamp(spanSizeLookup?($0) ?? 1, spanCount: spanCount) }
-                var totalHeight: CGFloat = 0
-
-                for row in SpanRows.build(count: data.count, spanCount: spanCount, span: { spans[$0] }) {
-                    var tallest: CGFloat = 0
-                    for index in row {
-                        let span = CGFloat(spans[index])
-                        let width = span * columnWidth + (span - 1) * spacing
-                        tallest = max(tallest, measuredHeight(at: index, of: data[index], width: width))
-                    }
-                    totalHeight += tallest + spacing
-                    if totalHeight >= maxHeight {
-                        return maxHeight
-                    }
-                }
-                if totalHeight > spacing {
-                    totalHeight -= spacing
-                }
-                return min(totalHeight, maxHeight)
-            }
-
-            var tallest: CGFloat = 0
-            for index in 0..<min(data.count, spanCount * 2) {
-                tallest = max(tallest, measuredHeight(at: index, of: data[index], width: WrapContentMetrics.horizontalItemWidth))
-            }
-            return min(CGFloat(spanCount) * tallest + CGFloat(spanCount - 1) * spacing, maxHeight)
-        }
-    }
-
-    private func measuredHeight(at index: Int, of item: Item, width: CGFloat) -> CGFloat {
-        ceil(SwiftUIMeasurement.fittingHeight(of: content(index, item), width: width))
-    }
 }
 
-/// The limits a ``RecyclerViewVerticalLayout/wrapContent`` list measures against.
-enum WrapContentMetrics {
-    /// Height kept free above the list for a navigation bar and the content above the list.
-    static let reservedTopHeight: CGFloat = 64 + 50
-    /// Height kept free for a header above the list.
-    static let reservedHeaderHeight: CGFloat = 80
-    /// Height kept free below the list.
-    static let bottomMargin: CGFloat = 20
-    /// The width an item in a horizontal list is assumed to have while its height is measured.
-    static let horizontalItemWidth: CGFloat = 150
-    /// Height added to a horizontal list beyond its tallest item.
-    static let horizontalExtraHeight: CGFloat = 15
+/// How a ``RecyclerViewVerticalLayout/wrapContent`` list learns the space it is given.
+@MainActor
+enum WrapContentSizing {
+    /// Makes iOS 16 and later size wrap-content lists the way earlier versions do. For tests only.
+    static var forcesLegacySizing = false
 
-    /// The tallest a wrap-content list may grow on a screen of the given height.
-    static func maxHeight(screenHeight: CGFloat, safeAreaInsets: UIEdgeInsets) -> CGFloat {
-        screenHeight
-            - (safeAreaInsets.top + reservedTopHeight)
-            - reservedHeaderHeight
-            - safeAreaInsets.bottom
-            - bottomMargin
+    /// Whether SwiftUI asks the list for its size through `UIViewRepresentable.sizeThatFits`, which
+    /// carries the proposed width and height. Before iOS 16 the list measures itself once laid out.
+    static var listAnswersSizeThatFits: Bool {
+        guard #available(iOS 16.0, *) else { return false }
+        return !forcesLegacySizing
     }
 }

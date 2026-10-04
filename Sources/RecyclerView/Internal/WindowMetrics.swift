@@ -14,8 +14,4 @@ enum WindowMetrics {
     static var safeAreaInsets: UIEdgeInsets {
         keyWindow?.safeAreaInsets ?? .zero
     }
-
-    static var screenBounds: CGRect {
-        keyWindow?.screen.bounds ?? UIScreen.main.bounds
-    }
 }

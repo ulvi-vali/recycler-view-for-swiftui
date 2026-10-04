@@ -30,8 +30,10 @@ struct ContactsScreen: View {
 }
 ```
 
-By default a list sizes itself to its rows, like Android's `wrap_content`. A list that is the main
-content of a screen should fill its container instead, with
+By default a list sizes itself to its rows, like Android's `wrap_content`. The rows are measured at
+the width the container proposes, and the list grows no taller than the height the container
+proposes, so it fits any container without assumptions about the window or the bars around it. A
+list that is the main content of a screen should fill its container instead, with
 ``RecyclerView/RecyclerView/verticalLayout(_:)`` set to ``RecyclerViewVerticalLayout/matchParent``.
 
 > Important: The modifiers declared on ``RecyclerView/RecyclerView`` return a `RecyclerView`. Apply
