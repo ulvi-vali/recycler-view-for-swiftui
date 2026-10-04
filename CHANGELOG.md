@@ -6,6 +6,12 @@ All notable changes to this project are documented in this file. The format foll
 
 ## [Unreleased]
 
+### Added
+
+- `RecyclerViewController.setContentInsets(_:animated:duration:)` sets the content inset on every
+  edge and insets both scroll indicators to match, and `contentInsets` reads it back.
+  `setBottomInset(_:animated:duration:)` remains, built on top of it.
+
 ### Changed
 
 - The package builds in the Swift 6 language mode with strict concurrency checking, and needs
@@ -27,6 +33,8 @@ All notable changes to this project are documented in this file. The format foll
 - `withoutStatusBar` read the safe area of the app's key window, which is the wrong window for a list
   in a secondary window or scene. It now reads the list's own window, falling back to the key window
   only until the list is in a window.
+- `setBottomInset` on a list flipped by `reverseLayout` or `stackFromEnd` inset the top of the screen,
+  because the flipped collection view's bottom edge is on top. Insets now follow the screen edges.
 
 ## [1.0.0] - 2026-09-10
 

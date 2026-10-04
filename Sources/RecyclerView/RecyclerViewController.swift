@@ -86,23 +86,49 @@ public final class RecyclerViewController {
         collectionView.setContentOffset(CGPoint(x: collectionView.contentOffset.x, y: y), animated: animated)
     }
 
-    /// Adds room to scroll past the end of the content without changing the list's size.
+    // MARK: - Insets
+
+    /// The list's content insets, by the edges of the list as it appears on screen.
     ///
-    /// Use it when a bar floats over the bottom of the list. Padding the list instead would stop the
-    /// content at the bar's edge, leaving nothing behind a translucent bar or a fade drawn over it; a
-    /// content inset lets the content run underneath while the last row can still be scrolled clear.
+    /// `.zero` until the list has been created.
+    public var contentInsets: UIEdgeInsets {
+        guard let collectionView = collectionView else { return .zero }
+        return Self.screenEdges(of: collectionView.contentInset, in: collectionView)
+    }
+
+    /// Adds room to scroll beyond the content on each edge, without changing the list's size.
+    ///
+    /// Use it when bars float over the list. Padding the list instead would stop the content at a
+    /// bar's edge, leaving nothing behind a translucent bar or a fade drawn over it; a content inset
+    /// lets the content run underneath while the first and last rows can still be scrolled clear.
+    /// The scroll indicators are inset by the same amounts, so they stay clear of the bars too.
+    ///
+    /// Edges refer to the list as it appears on screen. A list flipped by
+    /// ``RecyclerView/reverseLayout(_:)`` or ``RecyclerView/stackFromEnd(_:)`` still takes its
+    /// bottom inset at the bottom of the screen.
+    ///
+    /// ```swift
+    /// controller.setContentInsets(UIEdgeInsets(top: headerHeight, left: 0, bottom: barHeight, right: 0))
+    /// ```
     ///
     /// - Parameters:
-    ///   - inset: The bottom content inset, in points.
+    ///   - insets: The content insets, in points.
     ///   - animated: Whether to animate the change, so the content moves together with a bar sliding
     ///     in or out.
     ///   - duration: The duration of the animation, in seconds.
-    public func setBottomInset(_ inset: CGFloat, animated: Bool = false, duration: Double = 0.3) {
-        guard let collectionView = collectionView, collectionView.contentInset.bottom != inset else { return }
+    public func setContentInsets(_ insets: UIEdgeInsets, animated: Bool = false, duration: Double = 0.3) {
+        guard let collectionView = collectionView else { return }
+
+        let applied = Self.screenEdges(of: insets, in: collectionView)
+        guard collectionView.contentInset != applied
+            || collectionView.verticalScrollIndicatorInsets != applied
+            || collectionView.horizontalScrollIndicatorInsets != applied
+        else { return }
 
         let apply = {
-            collectionView.contentInset.bottom = inset
-            collectionView.verticalScrollIndicatorInsets.bottom = inset
+            collectionView.contentInset = applied
+            collectionView.verticalScrollIndicatorInsets = applied
+            collectionView.horizontalScrollIndicatorInsets = applied
         }
 
         if animated {
@@ -110,6 +136,30 @@ public final class RecyclerViewController {
         } else {
             apply()
         }
+    }
+
+    /// Adds room to scroll past the end of the content without changing the list's size.
+    ///
+    /// Use it when a bar floats over the bottom of the list. Equivalent to
+    /// ``setContentInsets(_:animated:duration:)`` with the other edges left as they are.
+    ///
+    /// - Parameters:
+    ///   - inset: The bottom content inset, in points.
+    ///   - animated: Whether to animate the change, so the content moves together with a bar sliding
+    ///     in or out.
+    ///   - duration: The duration of the animation, in seconds.
+    public func setBottomInset(_ inset: CGFloat, animated: Bool = false, duration: Double = 0.3) {
+        var insets = contentInsets
+        insets.bottom = inset
+        setContentInsets(insets, animated: animated, duration: duration)
+    }
+
+    /// Converts insets between the edges of the screen and those of the collection view, which differ
+    /// when a reversed layout has turned the collection view upside down. The conversion is its own
+    /// inverse.
+    private static func screenEdges(of insets: UIEdgeInsets, in collectionView: UICollectionView) -> UIEdgeInsets {
+        guard collectionView.transform != .identity else { return insets }
+        return UIEdgeInsets(top: insets.bottom, left: insets.right, bottom: insets.top, right: insets.left)
     }
 
     // MARK: - Queries

@@ -80,8 +80,8 @@ It also keeps Android's vocabulary (linear and grid layout managers, `spanSizeLo
 - **Pagination** with a single callback.
 - **Chat layouts** with `stackFromEnd` and `reverseLayout`.
 - **Programmatic scrolling** with `RecyclerViewController`: scroll to an item with an offset, find the
-  row under a line on screen, tell user scrolling from programmatic scrolling, and add a bottom inset
-  for floating bars.
+  row under a line on screen, tell user scrolling from programmatic scrolling, and set content
+  insets on any edge for floating bars.
 - **Wrap-content or match-parent sizing**, keyboard dismissal on drag, full-bleed headers under the
   status bar.
 - **UIKit support.** Use `RecyclerViewAdapter` to show SwiftUI rows in your own `UICollectionView`.
@@ -291,16 +291,25 @@ To keep a tab bar in sync with the list, ask which row is under the bar while th
 `isUserScrolling` is `false` during programmatic scrolls, so tapping a tab is not undone by the rows
 the list passes on its way.
 
-### Content under a floating bar
+### Content insets and floating bars
 
 Padding a list stops its content at the edge of a bar that floats over it. A content inset lets the
-content run underneath while the last row can still be scrolled clear:
+content run underneath while the first and last rows can still be scrolled clear. The scroll
+indicators are inset by the same amounts.
 
 ```swift
+// A header floating over the top and a toolbar over the bottom.
+controller.setContentInsets(UIEdgeInsets(top: 56, left: 0, bottom: 72, right: 0))
+
+// Only the bottom edge, animated together with a bar sliding in or out.
 .onChange(of: isCheckoutVisible) { visible in
     controller.setBottomInset(visible ? 72 : 0, animated: true, duration: 0.3)
 }
 ```
+
+Edges refer to the list as it appears on screen, so a chat list flipped by `stackFromEnd` or
+`reverseLayout` still takes its bottom inset at the bottom of the screen. `contentInsets` reads the
+current insets back.
 
 ### Rows that depend on their position
 
@@ -376,7 +385,9 @@ Full documentation is written as DocC comments and can be browsed in Xcode with
 | `scrollToItem(at:screenY:animated:)` | Scrolls a vertical list until the item's top edge sits on a line in window coordinates. |
 | `indexOfItem(atScreenY:)` | The first item crossing a horizontal line in window coordinates. |
 | `isUserScrolling` | Whether the user is dragging the list or it is decelerating from a drag. |
-| `setBottomInset(_:animated:duration:)` | Adds scrollable room below the content. |
+| `setContentInsets(_:animated:duration:)` | Adds scrollable room around the content and insets the scroll indicators to match. |
+| `setBottomInset(_:animated:duration:)` | Adds scrollable room below the content, keeping the other edges. |
+| `contentInsets` | The current content insets, by screen edge. |
 
 ### RecyclerViewLayoutManager
 

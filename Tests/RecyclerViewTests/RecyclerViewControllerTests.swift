@@ -107,10 +107,59 @@ final class RecyclerViewControllerTests: XCTestCase {
         XCTAssertEqual(fixture.collectionView.verticalScrollIndicatorInsets.bottom, 64)
     }
 
+    // MARK: - Insets
+
+    func testSetContentInsetsMovesContentAndBothIndicatorInsets() {
+        let fixture = makeFixture()
+        let insets = UIEdgeInsets(top: 40, left: 8, bottom: 64, right: 12)
+        fixture.controller.setContentInsets(insets)
+
+        XCTAssertEqual(fixture.collectionView.contentInset, insets)
+        XCTAssertEqual(fixture.collectionView.verticalScrollIndicatorInsets, insets)
+        XCTAssertEqual(fixture.collectionView.horizontalScrollIndicatorInsets, insets)
+        XCTAssertEqual(fixture.controller.contentInsets, insets)
+    }
+
+    func testAnimatedSetContentInsetsLandsOnTheNewInsets() {
+        let fixture = makeFixture()
+        let insets = UIEdgeInsets(top: 20, left: 0, bottom: 30, right: 0)
+        fixture.controller.setContentInsets(insets, animated: true, duration: 0.2)
+        XCTAssertEqual(fixture.collectionView.contentInset, insets)
+    }
+
+    func testScrollToItemReachesContentBehindATopInset() {
+        let fixture = makeFixture()
+        fixture.controller.setContentInsets(UIEdgeInsets(top: 40, left: 0, bottom: 0, right: 0))
+        fixture.controller.scrollToItem(at: 0, topOffset: 40, animated: false)
+        XCTAssertEqual(fixture.collectionView.contentOffset.y, -40)
+    }
+
+    func testSetBottomInsetKeepsTheOtherEdges() {
+        let fixture = makeFixture()
+        fixture.controller.setContentInsets(UIEdgeInsets(top: 40, left: 0, bottom: 0, right: 0))
+        fixture.controller.setBottomInset(64)
+        XCTAssertEqual(fixture.collectionView.contentInset, UIEdgeInsets(top: 40, left: 0, bottom: 64, right: 0))
+    }
+
+    /// A reversed list is turned upside down, so its bottom edge on screen is the collection view's top.
+    func testInsetsFollowTheScreenEdgesOfAReversedList() {
+        let fixture = makeFixture()
+        fixture.collectionView.transform = CGAffineTransform(rotationAngle: .pi)
+
+        fixture.controller.setBottomInset(64)
+        XCTAssertEqual(fixture.collectionView.contentInset, UIEdgeInsets(top: 64, left: 0, bottom: 0, right: 0))
+        XCTAssertEqual(fixture.controller.contentInsets.bottom, 64)
+
+        fixture.controller.setContentInsets(UIEdgeInsets(top: 10, left: 1, bottom: 20, right: 2))
+        XCTAssertEqual(fixture.collectionView.contentInset, UIEdgeInsets(top: 20, left: 2, bottom: 10, right: 1))
+    }
+
     func testUnattachedControllerDoesNothing() {
         let controller = RecyclerViewController()
         controller.scrollToItem(at: 0, animated: false)
         controller.setBottomInset(10)
+        controller.setContentInsets(UIEdgeInsets(top: 1, left: 1, bottom: 1, right: 1))
+        XCTAssertEqual(controller.contentInsets, .zero)
         XCTAssertNil(controller.indexOfItem(atScreenY: 0))
         XCTAssertFalse(controller.isUserScrolling)
     }
