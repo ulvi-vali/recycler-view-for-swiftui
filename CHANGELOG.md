@@ -18,6 +18,8 @@ All notable changes to this project are documented in this file. The format foll
   `moveItem(at:to:)` in the same batch update as deletions and insertions, keeping their cells,
   instead of being deleted and inserted again.
 - `RecyclerViewAdapter.notifyItemMoved(from:to:)`.
+- `RecyclerViewAdapter.invalidateMeasurement(at:)` and `invalidateAllMeasurements()`, for rows that
+  depend on state outside their item.
 
 ### Changed
 
@@ -44,6 +46,11 @@ All notable changes to this project are documented in this file. The format foll
 - `withoutStatusBar` read the safe area of the app's key window, which is the wrong window for a list
   in a secondary window or scene. It now reads the list's own window, falling back to the key window
   only until the list is in a window.
+- A row whose content changed while its `id` stayed the same kept its old cached height, as did a
+  wrap-content list sized from it. Assigning items now drops the measurements of changed items:
+  exactly those that differ when `Item` is `Equatable`, and the rows on screen otherwise.
+  `notifyItemChanged(at:)` drops the item's measurement and invalidates the layout, and
+  `notifyDataSetChanged()` drops all of them.
 - `setBottomInset` on a list flipped by `reverseLayout` or `stackFromEnd` inset the top of the screen,
   because the flipped collection view's bottom edge is on top. Insets now follow the screen edges.
 

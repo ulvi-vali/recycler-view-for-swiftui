@@ -168,6 +168,9 @@ struct RecyclerViewRepresentable<Item: Identifiable, Content: View>: UIViewRepre
             collectionView.setCollectionViewLayout(RecyclerViewLayoutFactory.makeLayout(for: layout, adapter: adapter), animated: false)
             adapter.notifyDataSetChanged()
         } else if oldIDs != newIDs {
+            // Rows that keep their identity but changed are measured again from now, so a wrap-content
+            // list sized before the diff is applied already sees their new heights.
+            adapter.invalidateMeasurements(ofItemsChangedFrom: coordinator.lastData, to: newData)
             applyDiff(from: oldIDs, to: newIDs, newData: newData, version: version, collectionView: collectionView, coordinator: coordinator)
         } else {
             // Same identities, but the items themselves may carry new values.
@@ -254,6 +257,11 @@ struct RecyclerViewRepresentable<Item: Identifiable, Content: View>: UIViewRepre
         } else {
             UIView.performWithoutAnimation(performUpdates)
         }
+
+        // A wrap-content list was sized for these items before they reached the collection view. Rows
+        // measured since then by the layout may have changed, so the list is sized once more.
+        coordinator.reportWrapContentHeight?()
+        collectionView.invalidateIntrinsicContentSize()
     }
 
     private func configure(_ adapter: RecyclerViewAdapter<Item, Content>) {

@@ -424,7 +424,9 @@ Full documentation is written as DocC comments and can be browsed in Xcode with
   identities cross to the background queue. An update that arrives later supersedes a diff still in
   flight, and each diff is measured from the items the collection view actually holds.
 - Vertical linear lists measure each row once per item and width, the same way the cell sizes itself,
-  and pass the result to the layout as the estimated height.
+  and pass the result to the layout as the estimated height. When an item keeps its `id` but its
+  value changes, its measurements are dropped and the row is measured again: exactly the changed
+  items when `Item` is `Equatable`, the rows on screen otherwise.
 - Reversed layouts rotate the collection view by 180° and rotate each cell back.
 
 ## Example app
@@ -450,6 +452,13 @@ contains exactly `pageSize` items.
 
 **Rows show old data after an update.**
 Give each item a stable `id` that changes only when the item is a different item.
+
+**A row keeps its old height after its content changes.**
+Make the item type `Equatable`. The list then knows exactly which items changed and measures them
+again, including rows that are off screen. Without `Equatable` only the rows on screen are measured
+again, and other rows correct their height as they scroll into view. In UIKit, call
+`notifyItemChanged(at:)`, or `invalidateMeasurement(at:)` when a row depends on state outside its
+item.
 
 ## Requirements
 

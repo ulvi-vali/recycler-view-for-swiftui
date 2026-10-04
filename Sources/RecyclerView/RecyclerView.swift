@@ -150,6 +150,9 @@ public struct RecyclerView<Item: Identifiable, Content: View>: View {
     /// given to the layout as its estimated height. With close estimates, rows do not shift as they
     /// scroll into view, which is most noticeable when row heights vary widely.
     ///
+    /// An item that keeps its `id` but changes is measured again. Make `Item` conform to `Equatable`
+    /// so that exactly the changed items are; otherwise the rows on screen are.
+    ///
     /// Measuring costs one hosting controller per item the first time the list lays it out. For a
     /// very large data set loaded all at once, disable it to fall back to lazy, uniform estimates.
     /// Grid and horizontal layouts always use uniform estimates.

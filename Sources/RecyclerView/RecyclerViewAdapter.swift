@@ -41,12 +41,18 @@ public class RecyclerViewAdapter<Item: Identifiable, Content: View>: NSObject, U
     ///
     /// Assigning items does not update the collection view. Call ``notifyDataSetChanged()``, or one
     /// of the granular `notify` methods, afterwards.
+    ///
+    /// Assigning items drops the cached measurements of items that kept their `id` but changed, so
+    /// their rows are measured again. When `Item` is `Equatable`, exactly the items that differ from
+    /// the old item with the same `id` are measured again. Otherwise every item shown on screen is,
+    /// since those are the rows rebound with the new values.
     public var items: [Item] = [] {
         didSet {
             if items.count > previousItemCount {
                 loadMoreTriggered = false
             }
             previousItemCount = items.count
+            invalidateMeasurements(ofItemsChangedFrom: oldValue, to: items)
         }
     }
 
@@ -58,8 +64,7 @@ public class RecyclerViewAdapter<Item: Identifiable, Content: View>: NSObject, U
 
     private var previousItemCount = 0
     private var loadMoreTriggered = false
-    private var heightCache: [String: CGFloat] = [:]
-    private var idealSizeCache: [String: CGSize] = [:]
+    private var measurements = RowMeasurementCache()
 
     /// Creates an adapter that builds each row from its index and item, and attaches it to
     /// `collectionView`.
@@ -98,15 +103,16 @@ public class RecyclerViewAdapter<Item: Identifiable, Content: View>: NSObject, U
     /// sliding while the list scrolls. A close estimate leaves nothing to correct.
     ///
     /// Rows are measured the way their cells size themselves, so the estimate matches the final height.
-    /// Each measurement costs one hosting view and is made once per item identity and width.
+    /// Each measurement costs one hosting view and is made once per item identity and width, until the
+    /// item changes; see ``items``.
     public func measuredHeight(for item: Item, at index: Int, width: CGFloat) -> CGFloat {
-        let key = "\(getItemIDString(for: item, at: index))@\(Int(width.rounded()))"
-        if let cached = heightCache[key] {
+        let id = getItemIDString(for: item, at: index)
+        if let cached = measurements.height(for: id, width: width) {
             return cached
         }
 
         let height = max(1, ceil(SwiftUIMeasurement.fittingHeight(of: content(index, item), width: width)))
-        heightCache[key] = height
+        measurements.setHeight(height, for: id, width: width)
         return height
     }
 
@@ -115,15 +121,51 @@ public class RecyclerViewAdapter<Item: Identifiable, Content: View>: NSObject, U
     /// Items in horizontal layouts choose their own width, so a wrap-content horizontal list is as
     /// tall as the tallest ideal height among its items.
     func measuredIdealSize(for item: Item, at index: Int) -> CGSize {
-        let key = "\(getItemIDString(for: item, at: index))@ideal"
-        if let cached = idealSizeCache[key] {
+        let id = getItemIDString(for: item, at: index)
+        if let cached = measurements.idealSize(for: id) {
             return cached
         }
 
         let size = SwiftUIMeasurement.idealSize(of: content(index, item))
         let rounded = CGSize(width: max(1, ceil(size.width)), height: max(1, ceil(size.height)))
-        idealSizeCache[key] = rounded
+        measurements.setIdealSize(rounded, for: id)
         return rounded
+    }
+
+    /// Drops the cached measurements of the item at `index`, so its row is measured again the next
+    /// time the layout asks.
+    ///
+    /// Assigning ``items`` and calling ``notifyItemChanged(at:)`` already do this for items that
+    /// changed. Call it when a row's content depends on state outside its item.
+    public func invalidateMeasurement(at index: Int) {
+        guard items.indices.contains(index) else { return }
+        measurements.invalidate([getItemIDString(for: items[index], at: index)])
+    }
+
+    /// Drops every cached measurement, so all rows are measured again.
+    public func invalidateAllMeasurements() {
+        measurements.removeAll()
+    }
+
+    /// Drops the cached measurements of the items in `newItems` that kept their identity from
+    /// `oldItems` but changed.
+    func invalidateMeasurements(ofItemsChangedFrom oldItems: [Item], to newItems: [Item]) {
+        guard !measurements.isEmpty else { return }
+
+        if let changed = ItemChanges.changedIndices(from: oldItems, to: newItems) {
+            measurements.invalidate(changed.map { getItemIDString(for: newItems[$0], at: $0) })
+            return
+        }
+
+        // Without Equatable there is no telling which items changed. The rows on screen are the ones
+        // rebound with the new values, so those are measured again; the others size themselves as they
+        // scroll into view.
+        guard let collectionView = collectionView else { return }
+        let newIDs = Set(newItems.map(\.id))
+        let rebound = collectionView.indexPathsForVisibleItems
+            .map(\.item)
+            .filter { oldItems.indices.contains($0) && newIDs.contains(oldItems[$0].id) }
+        measurements.invalidate(rebound.map { getItemIDString(for: oldItems[$0], at: $0) })
     }
 
     // MARK: - Notifying changes
@@ -146,20 +188,26 @@ public class RecyclerViewAdapter<Item: Identifiable, Content: View>: NSObject, U
     }
 
     /// Rebinds the item at `index`, reloading it if its cell is not on screen.
+    ///
+    /// The item's cached measurement is dropped and the layout invalidated, so the row takes the
+    /// height of its new content.
     public func notifyItemChanged(at index: Int) {
         guard let collectionView = collectionView else { return }
 
+        invalidateMeasurement(at: index)
         let indexPath = IndexPath(item: index, section: 0)
         if let cell = collectionView.cellForItem(at: indexPath) as? ViewHolder<Content> {
             let item = items[index]
             cell.bind(content(index, item), itemID: getItemIDString(for: item, at: index), parentViewController: parentViewController)
+            collectionView.collectionViewLayout.invalidateLayout()
         } else {
             collectionView.reloadItems(at: [indexPath])
         }
     }
 
-    /// Reloads every item.
+    /// Reloads every item, measuring every row again.
     public func notifyDataSetChanged() {
+        measurements.removeAll()
         collectionView?.reloadData()
     }
 
