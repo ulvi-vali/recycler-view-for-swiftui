@@ -102,14 +102,14 @@ RecyclerView is distributed with [Swift Package Manager](https://www.swift.org/d
 
 1. Choose **File › Add Package Dependencies…**
 2. Enter `https://github.com/ulvi-vali/recycler-view-for-swiftui.git`
-3. Select **Up to Next Major Version** from `2.1.0` and add the **RecyclerView** library to your app
+3. Select **Up to Next Major Version** from `2.2.0` and add the **RecyclerView** library to your app
    target.
 
 ### Package.swift
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/ulvi-vali/recycler-view-for-swiftui.git", from: "2.1.0")
+    .package(url: "https://github.com/ulvi-vali/recycler-view-for-swiftui.git", from: "2.2.0")
 ],
 targets: [
     .target(
@@ -457,6 +457,7 @@ Full documentation is written as DocC comments and can be browsed in Xcode with
 | `.controller(_:)` | Attaches a `RecyclerViewController`. |
 | `.onItemClick(_:)` | Called with the index and item when a row is tapped. |
 | `.onScroll(_:)` | Called with the content offset as the list scrolls. |
+| `.onScrollEdges(_:)` | Called with how far the list can still scroll towards each end (`RecyclerViewScrollEdges`), also before it moves and when its content changes; for shadows over cut-off ends. |
 | `.onLoadMore(pageSize:perform:)` | Called with the next page index and the item count near the end. |
 
 ### RecyclerViewController

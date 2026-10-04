@@ -23,6 +23,8 @@ struct RecyclerViewRepresentable<Item: Identifiable, Content: View>: UIViewRepre
     var onWrapContentHeight: ((CGFloat) -> Void)?
     /// Receives the safe-area insets of the list's own window, for lists drawn under the status bar.
     var onWindowSafeAreaInsets: ((UIEdgeInsets) -> Void)?
+    /// Receives how far the list can still scroll each way.
+    var onScrollEdges: ((RecyclerViewScrollEdges) -> Void)?
 
     func makeCoordinator() -> RecyclerViewCoordinator<Item, Content> {
         RecyclerViewCoordinator()
@@ -78,7 +80,22 @@ struct RecyclerViewRepresentable<Item: Identifiable, Content: View>: UIViewRepre
         }
         coordinator.reportWrapContentHeight = makeWrapContentReporter(for: collectionView, coordinator: coordinator)
         configureWindowReporting(of: collectionView)
+        configureEdgeReporting(of: collectionView)
         return collectionView
+    }
+
+    private func configureEdgeReporting(of collectionView: UIRecyclerView) {
+        collectionView.scrollAxis = layout.orientation == .vertical ? .vertical : .horizontal
+        guard let onScrollEdges = onScrollEdges else {
+            collectionView.onScrollEdgesChange = nil
+            return
+        }
+        collectionView.onScrollEdgesChange = { edges in
+            // Reported on a later turn: this runs during layout, when SwiftUI state must not change.
+            Task { @MainActor in
+                onScrollEdges(edges)
+            }
+        }
     }
 
     private func configureWindowReporting(of collectionView: UIRecyclerView) {
@@ -137,6 +154,7 @@ struct RecyclerViewRepresentable<Item: Identifiable, Content: View>: UIViewRepre
         applyTransform(to: collectionView)
         configureScrolling(of: collectionView)
         configureWindowReporting(of: collectionView)
+        configureEdgeReporting(of: collectionView)
 
         guard let adapter = coordinator.adapter else { return }
         if configure(adapter) {

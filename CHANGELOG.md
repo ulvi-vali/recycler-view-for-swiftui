@@ -6,6 +6,16 @@ All notable changes to this project are documented in this file. The format foll
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-10-04
+
+### Added
+
+- `.onScrollEdges(_:)` reports `RecyclerViewScrollEdges` — how far the list can still scroll towards
+  its start and its end — whenever that changes: as it scrolls, and when items or the list's size
+  change without a scroll, so a list that has not moved yet is reported too. Distances include the
+  content insets, ignore bouncing, and are measured on screen in reversed lists. Reports come on the
+  next turn of the main run loop, so they can set SwiftUI state.
+
 ## [2.1.0] - 2026-10-04
 
 ### Added
@@ -134,7 +144,8 @@ The first tagged release.
 - The public `RecyclerViewCoordinator` type and `UIHostingController.init(rootView:ignoreSafeArea:)`
   extension, which were implementation details.
 
-[Unreleased]: https://github.com/ulvi-vali/recycler-view-for-swiftui/compare/2.1.0...HEAD
+[Unreleased]: https://github.com/ulvi-vali/recycler-view-for-swiftui/compare/2.2.0...HEAD
+[2.2.0]: https://github.com/ulvi-vali/recycler-view-for-swiftui/compare/2.1.0...2.2.0
 [2.1.0]: https://github.com/ulvi-vali/recycler-view-for-swiftui/compare/2.0.0...2.1.0
 [2.0.0]: https://github.com/ulvi-vali/recycler-view-for-swiftui/compare/1.0.0...2.0.0
 [1.0.0]: https://github.com/ulvi-vali/recycler-view-for-swiftui/releases/tag/1.0.0

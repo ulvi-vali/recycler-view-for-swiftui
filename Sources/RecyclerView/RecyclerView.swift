@@ -33,6 +33,7 @@ public struct RecyclerView<Item: Identifiable, Content: View>: View {
     private var stackFromEnd = false
     private var pageSize = RecyclerViewDefaults.pageSize
     private var onScroll: ((CGPoint) -> Void)?
+    private var onScrollEdges: ((RecyclerViewScrollEdges) -> Void)?
     private var onLoadMore: ((Int, Int) -> Void)?
     private var withoutStatusBar = false
     private var keyboardDismissal: RecyclerViewKeyboardDismissal?
@@ -322,6 +323,25 @@ public struct RecyclerView<Item: Identifiable, Content: View>: View {
         return copy
     }
 
+    /// Calls `action` with how far the list can still scroll towards each end, whenever that
+    /// changes: as it scrolls, and when items or the list's size change it without scrolling.
+    ///
+    /// Unlike ``onScroll(_:)`` it also reports a list that has not moved yet, so a shadow over a cut
+    /// off end is right from the first frame. It is called on the next turn of the main run loop, so
+    /// it can set SwiftUI state.
+    ///
+    /// ```swift
+    /// @State private var edges = RecyclerViewScrollEdges(toStart: 0, toEnd: 0)
+    ///
+    /// RecyclerView(data: rows) { row in RowView(row: row) }
+    ///     .onScrollEdges { edges = $0 }
+    /// ```
+    public func onScrollEdges(_ action: @escaping (_ edges: RecyclerViewScrollEdges) -> Void) -> Self {
+        var copy = self
+        copy.onScrollEdges = action
+        return copy
+    }
+
     /// Requests the next page as the user nears the end of the list.
     ///
     /// Pagination assumes every page except the last holds exactly `pageSize` items. The callback
@@ -399,6 +419,7 @@ public struct RecyclerView<Item: Identifiable, Content: View>: View {
             controller: controller
         )
         representable.onWrapContentHeight = onWrapContentHeight
+        representable.onScrollEdges = onScrollEdges
         if withoutStatusBar {
             representable.onWindowSafeAreaInsets = { windowTopInset = $0.top }
         }
